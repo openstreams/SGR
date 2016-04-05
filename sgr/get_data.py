@@ -80,6 +80,17 @@ def get_gdac_file_by_date(thedatetime=None,skipifexists=True):
     return localfname
 
 
+def get_available_modis_dates():
+    """
+
+    :return: list of availble dates
+    """
+
+    listofdates = []
+
+    return listofdates
+
+
 def main(argv=None):
     #get_gdac_file_by_date(skipifexists=True)
     get_modis_file_by_date(thedatetime=datetime.datetime(2016,2,2),skipifexists=True)

@@ -46,6 +46,7 @@ def readmodisswir21(fname):
 
 
 
+
 fname = 'MCD43C4.A2016033.005.2016050202316.h5'
 outfname = fname[0:16] + ".tif"
 lon,lat,swir21 = readmodisswir21(fname)
