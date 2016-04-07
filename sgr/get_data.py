@@ -7,6 +7,7 @@ import os
 import re
 from bs4 import BeautifulSoup
 import subprocess
+import netCDF4
 
 
 
@@ -91,10 +92,25 @@ def get_available_modis_dates():
     return listofdates
 
 
+def get_stationfrombeck(fname,id):
+    """
+    Gets the Q data from a back station id
+
+    :param fname:
+    :param id:
+    :return:
+    """
+
+    bd = netCDF4.Dataset(fname,mode='r')
+
+    print bd.variables['ID'][:]
+
+
 def main(argv=None):
     #get_gdac_file_by_date(skipifexists=True)
-    get_modis_file_by_date(thedatetime=datetime.datetime(2016,2,2),skipifexists=True)
-
+    #get_modis_file_by_date(thedatetime=datetime.datetime(2016,2,2),skipifexists=True)
+    get_stationfrombeck('Beck_Runoff_Database_v3.nc',2)
 
 if __name__ == "__main__":
     main()
+

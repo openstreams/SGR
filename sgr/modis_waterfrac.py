@@ -39,17 +39,21 @@ def readmodisswir21(fname):
     result = f[swir21name][:].astype(float)
     result[result == 32767] = np.nan
     result = result * 0.0001
-    lon = np.arange(-180,180,0.05)
-    lat = np.arange(-90,90,0.05)
+    x = np.arange(-180,180,0.05)
+    y = np.arange(-90,90,0.05)[::-1]
 
-    return lon,lat[::-1], result
-
-
+    return x,y, result
 
 
-fname = 'MCD43C4.A2016033.005.2016050202316.h5'
-outfname = fname[0:16] + ".tif"
-lon,lat,swir21 = readmodisswir21(fname)
-wf = detwfrac(swir21)
 
-utils.writeMap(outfname,'GTiff',lon,lat,wf,np.nan)
+def main(argv=None):
+    fname = 'MCD43C4.A2016033.005.2016050202316.h5'
+    outfname = fname[0:16] + ".tif"
+    x,y,swir21 = readmodisswir21(fname)
+    wf = detwfrac(swir21)
+
+    utils.writeMap(outfname,'GTiff',x,y,wf,np.nan)
+
+
+if __name__ == "__main__":
+    main()
