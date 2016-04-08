@@ -18,7 +18,7 @@ else:
 
 import osgeo.gdal as gdal
 
-def get_data(path):
-    return os.path.join(_ROOT, 'data', path)
+def get_path_from_root(path):
+    return os.path.join(_ROOT, path)
     
     
