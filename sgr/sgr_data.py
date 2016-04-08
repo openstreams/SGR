@@ -108,7 +108,6 @@ class SignalQCdf():
         a_ss = np.sort(self.Signal[id,validpoinst])
         signalpos = np.searchsorted(a_ss,signal)
 
-
         extrapolate = True if signalpos > len(a_qs) - 1 else False
         if not extrapolate:
             perfectmatch = True if a_ss[signalpos] ==  signal else False
@@ -116,7 +115,6 @@ class SignalQCdf():
             perfectmatch = False
 
         atlowedge = True if signalpos == 0 else False
-
         # In this case we can safely return the matching Q value
         if perfectmatch and not extrapolate:
             return a_qs[signalpos]
@@ -160,7 +158,7 @@ class SignalQCdf():
 # #print swir21[zzx]
 #print np.nanmean(wf[zz])
 
-dz = SignalQCdf(qnetcdf,modissignalnetcdf)
-dz.findqfromsignal(45,1)
-dz.findqfromsignal(9,1)
-dz.findqfromsignal(0.1,1)
+#dz = SignalQCdf(qnetcdf,modissignalnetcdf)
+#dz.findqfromsignal(45,1)
+#dz.findqfromsignal(9,1)
+#dz.findqfromsignal(0.1,1)

@@ -1,4 +1,4 @@
-__all__ = ["utils","get_data","modis_waterfrac"]
+__all__ = ["utils","get_data","modis_waterfrac","sgr_data"]
 
 __author__ = 'van Dijk/Schellekens'
 __version__ = '0.1'
