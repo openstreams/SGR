@@ -10,6 +10,7 @@ import subprocess
 import netCDF4
 import re
 import sgr
+import sgr.utils
 
 
 stagingarea = sgr.get_path_from_root('staging')
@@ -66,18 +67,16 @@ def httpdownloadurl(url,localdir):
 
 
 
-def converttohdf5(fname):
+def converttohdf5(fname,h5name):
     """
 
     :param fname:
     :return:
     """
 
-    h5name = fname.split('hdf')[0] + 'h5'
     converter = sgr.get_path_from_root(os.path.join('convert','bin','h4toh5convert.exe'))
     subprocess.call([converter,fname,h5name])
 
-    return h5name
 
 
 def get_gdac_file_by_date(thedatetime=None,skipifexists=True):
@@ -117,6 +116,7 @@ def get_available_modis_files(years):
     :return: list of all availble dates
     """
     url_date = {}
+
     remotedir = "http://e4ftl01.cr.usgs.gov/MOTA/MCD43C4.005"
     now = datetime.datetime.now()
     urlpath = urllib.urlopen(remotedir)
@@ -136,7 +136,10 @@ def get_available_modis_files(years):
         res = dirlisthtml.findAll('a',text=re.compile(".hdf"))
         fn = str(res[0]).split('"')[1]
         filelocation = remotedir + '/' + filedir + '/' + fn
-        url_date[filelocation] = datetime.datetime.now()
+        yrstr = fn.split('/')[5].split('.')
+
+        thedate = datetime.date(yrstr[0],yrstr[1],yrstr[2])
+        url_date[filelocation] = thedate
 
     return url_date
 

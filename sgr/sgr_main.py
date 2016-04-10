@@ -2,6 +2,7 @@
 import sgr.get_data
 import sgr.modis_waterfrac
 import sgr.sgr_data
+import sgr.utils
 import os
 import numpy as np
 
@@ -9,18 +10,32 @@ import numpy as np
 
 
 def main(argv=None):
+
+    logger = sgr.utils.setlogger('sgr.log','sgr')
     #get_gdac_file_by_date(skipifexists=True)
     #get_modis_file_by_date(thedatetime=datetime.datetime(2016,2,2),skipifexists=True)
+
+    logger.info('Getting modis file list..')
     url,fname = sgr.get_data.get_last_available_modis_file()
 
     lst = sgr.get_data.get_available_modis_files([2014,2015,2016])
 
+    # Loop of list of modis files
     for url in lst:
         fname = os.path.basename(url)
         lfilename = os.path.join(sgr.get_data.stagingarea, fname)
         if not os.path.exists(lfilename):
+            logger.info('Getting modis file:' + url)
             sgr.get_data.httpdownloadurl(url,lfilename)
-            h5fname = sgr.get_data.converttohdf5(lfilename)
+        else:
+            logger.info('Skipping modis file: ' + url)
+        h5fname = lfilename.split('hdf')[0] + 'h5'
+        if not os.path.exists(h5fname):
+            sgr.get_data.converttohdf5(lfilename,h5fname)
+        else:
+            logger.info('Skipping modis file conversion to h5: ' + h5fname)
+
+
 
     return
     x,y,swir21 = sgr.modis_waterfrac.readmodisswir21(h5fname)
