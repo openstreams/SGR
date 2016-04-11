@@ -9,6 +9,7 @@ __release__ = "2016"
 import sys
 import os
 
+config = None
 
 if hasattr(sys, "frozen"):
     _ROOT = os.path.abspath(os.path.dirname(__file__)).split("library.zip")[0]

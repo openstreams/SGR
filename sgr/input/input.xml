@@ -1,0 +1,68 @@
+<TimeSeries xmlns="http://www.wldelft.nl/fews/PI"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.wldelft.nl/fews/PI http://fews.wldelft.nl/schemas/version1.0/pi-schemas/pi_timeseries.xsd"
+version="1.2">
+<timeZone>0.0</timeZone>
+<series>
+  <header>
+    <type>instantaneous</type>
+    <locationId>295</locationId> <!-- Put the locationId here.
+                                   the locationId is defined by the data supplier. Delft-Fews
+                                   will map this to an internal location if needed.
+                            -->
+    <parameterId>Q.obs</parameterId> <!-- Put the parameterId here.
+                            the parameterIdis defined by the data supplier. Delft-Fews
+                                   will map this to an internal location if needed. -->
+    <timeStep unit="nonequidistant"/>
+    <!-- start and end date/time are required! -->
+    <startDate date="2014-08-01" time="00:00:00"/>
+    <endDate date="2015-03-01" time="00:00:00"/>
+    <missVal>-999.0</missVal>
+    <longName>Fitz</longName>
+    <units>m</units>
+  </header>
+  <properties>
+    <dateTime key="requestTime" date="2014-03-10" time="15:43:04" />
+    <string value="source" key="Matroos"/>
+  </properties>
+  <event date="2014-08-01" time="00:00:00" value="2.66"/>
+  <event date="2014-09-01" time="00:00:00" value="2.66"/>
+  <event date="2014-10-01" time="00:00:00" value="2.66"/>
+  <event date="2014-11-01" time="00:00:00" value="-2.0"/>
+  <event date="2014-12-01" time="00:00:00" value="2.0"/>
+  <event date="2015-01-01" time="00:00:00" value="2.0"/>
+  <event date="2015-02-01" time="00:00:00" value="2.0"/>
+  <event date="2015-03-01" time="00:00:00" value="-2.0"/>
+</series>
+<series>
+  <header>
+    <type>instantaneous</type>
+    <locationId>230</locationId> <!-- Put the locationId here.
+                                   the locationId is defined by the data supplier. Delft-Fews
+                                   will map this to an internal location if needed.
+                            -->
+    <parameterId>Q.obs</parameterId> <!-- Put the parameterId here.
+                            the parameterIdis defined by the data supplier. Delft-Fews
+                                   will map this to an internal location if needed. -->
+    <timeStep unit="nonequidistant"/>
+    <!-- start and end date/time are required! -->
+    <startDate date="2014-08-01" time="00:00:00"/>
+    <endDate date="2015-03-01" time="00:00:00"/>
+    <missVal>-999.0</missVal>
+    <longName>Fitz</longName>
+    <units>m</units>
+  </header>
+  <properties>
+    <dateTime key="requestTime" date="2014-03-10" time="15:43:04" />
+    <string value="source" key="Matroos"/>
+  </properties>
+  <event date="2014-08-01" time="00:00:00" value="2.66"/>
+  <event date="2014-09-01" time="00:00:00" value="2.66"/>
+  <event date="2014-10-01" time="00:00:00" value="2.66"/>
+  <event date="2014-11-01" time="00:00:00" value="-2.0"/>
+  <event date="2014-12-01" time="00:00:00" value="2.0"/>
+  <event date="2015-01-01" time="00:00:00" value="2.0"/>
+  <event date="2015-02-01" time="00:00:00" value="2.0"/>
+  <event date="2015-03-01" time="00:00:00" value="-2.0"/>
+</series>
+</TimeSeries>

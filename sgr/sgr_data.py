@@ -4,11 +4,9 @@ import netCDF4
 
 import sgr
 
-qnetcdf = sgr.get_path_from_root('data/Beck_Runoff_Database_v3.nc')
-modissignalnetcdf = sgr.get_path_from_root('data/MODIS_SGR.nc')
-modiscellidlist = sgr.get_path_from_root('data/MODIS_SGR_cells.csv')
 
-def getcelllocsmodis(id):
+
+def getcellloc(id,cellidlist):
     """
     get the cell x,y coordinates for a given reach id
 
@@ -17,24 +15,7 @@ def getcelllocsmodis(id):
     """
     # assume the id''s match the line numbers
     skipheader =  id
-    idlst = np.genfromtxt(modiscellidlist,delimiter=',',skip_header=skipheader,max_rows=1)
-
-    if not idlst[0] == id:
-        raise ValueError("Id does not match ")
-
-    return idlst[1:].reshape((2,8)).transpose()
-
-
-def getcelllocsgdac(id):
-    """
-    get the cell x,y coordinates for a given reach id
-
-    :param id:
-    :return:
-    """
-    # assume the id''s match the line numbers
-    skipheader =  id
-    idlst = np.genfromtxt(modiscellidlist,delimiter=',',skip_header=skipheader,max_rows=1)
+    idlst = np.genfromtxt(cellidlist,delimiter=',',skip_header=skipheader,max_rows=1)
 
     if not idlst[0] == id:
         raise ValueError("Id does not match ")
@@ -43,7 +24,8 @@ def getcelllocsgdac(id):
 
 
 
-def get_signal_ids(id,y_array, x_array,source='modis'):
+
+def get_signal_ids(id,y_array, x_array,cellidlist):
     """
     get the array id's if the signal for reach id "id"
 
@@ -53,10 +35,8 @@ def get_signal_ids(id,y_array, x_array,source='modis'):
     xx = []
     yy = []
 
-    if source == 'modis':
-        cels = getcelllocsmodis(id)
-    else:
-        cels = getcelllocsgdac(id)
+
+    cels = getcellloc(id,cellidlist)
 
     for pt in cels:
         intx = abs(np.diff(x_array).mean())
@@ -94,6 +74,7 @@ class SignalQCdf():
 
     def findqfromsignal(self,signal,id):
         """
+        Does cdf matching on Q and signal
 
         :param signal:
         :return:
@@ -135,30 +116,3 @@ class SignalQCdf():
             yest = a_qs[0] + slope * (signal - a_ss[0])
             yest = max(yest,0.0)
             return yest
-
-
-
-
-
-
-
-#a = getcelllocs(10)
-#fname = 'MCD43C4.A2016033.005.2016050202316.h5'
-#outfname = fname[0:16] + ".tif"
-#x, y, swir21 = modis_waterfrac.readmodisswir21(fname)
-#wf = modis_waterfrac.detwfrac(swir21)
-#
-#
-#zz = get_signal_ids(2,y,x)
-#
-#
-# print x.min()
-#
-# print zz
-# #print swir21[zzx]
-#print np.nanmean(wf[zz])
-
-#dz = SignalQCdf(qnetcdf,modissignalnetcdf)
-#dz.findqfromsignal(45,1)
-#dz.findqfromsignal(9,1)
-#dz.findqfromsignal(0.1,1)
