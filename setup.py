@@ -4,7 +4,7 @@ import sgr
 try:
     from setuptools import setup
 except ImportError:
-    from distutils.core import setup
+    from distutils.core import  setup
 from setuptools import find_packages
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.md')).read()
