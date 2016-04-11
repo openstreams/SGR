@@ -116,3 +116,6 @@ class SignalQCdf():
             yest = a_qs[0] + slope * (signal - a_ss[0])
             yest = max(yest,0.0)
             return yest
+
+
+

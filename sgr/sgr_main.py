@@ -146,16 +146,16 @@ def main(argv=None):
     qnetcdf = sgr.utils.configget(logger,sgr.config,'data','qdbase', sgr.get_path_from_root('data/Beck_Runoff_Database_v3.nc'))
     modissignalnetcdf = sgr.utils.configget(logger,sgr.config,'data','modissignaldbase',sgr.get_path_from_root('data/MODIS_SGR.nc'))
     modiscellidlist = sgr.utils.configget(logger,sgr.config,'data','modisidlist',sgr.get_path_from_root('data/MODIS_SGR_cells.csv'))
-    staging= sgr.utils.configget(logger,sgr.config,'data','staging',sgr.get_path_from_root('staging/'))
+    staging=sgr.utils.configget(logger,sgr.config,'data','staging',sgr.get_path_from_root('staging/'))
 
 
     #url,fname = sgr.get_data.get_last_available_modis_file()
 
     #lst = sgr.get_data.get_available_modis_files([2014,2015,2016],logger)
 
-    requesteddats = sgr.fews.readpixml('input/input.xml')
+    #requesteddats = sgr.fews.readpixml('input/input.xml')
 
-    localfiles = downloadandprocess([2014,2015,2016],logger, staging=staging)
+    localfiles = downloadandprocess([2001],logger, staging=staging)
 
 
     #Initialize the databse lookup object
