@@ -4,7 +4,7 @@
 import urllib
 import datetime
 import os
-import re
+import sys
 from bs4 import BeautifulSoup
 import subprocess
 import netCDF4
@@ -59,7 +59,13 @@ def httpdownloadurl(url,localdir):
     :return:
     """
 
-    fn, head = urllib.urlretrieve(url, localdir)
+    if os.path.exists(os.path.dirname(localdir)):
+        fn, head = urllib.urlretrieve(url, localdir)
+    else:
+        print "Directory for local data does not exists: " + os.path.dirname(localdir)
+        raise IOError
+
+
 
 
 
@@ -75,7 +81,14 @@ def converttohdf5(fname,h5name):
     """
 
     converter = sgr.get_path_from_root(os.path.join('convert','bin','h4toh5convert.exe'))
-    subprocess.call([converter,fname,h5name])
+    try:
+        subprocess.call([converter,fname,h5name])
+    except OSError as e:
+        print "OS error({0}): {1}".format(e.errno, e.strerror)
+        raise
+    except:
+        print "Unexpected error:", sys.exc_info()[0]
+        raise
 
 
 

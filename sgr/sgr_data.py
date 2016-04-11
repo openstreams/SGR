@@ -3,6 +3,8 @@ import modis_waterfrac
 import netCDF4
 
 import sgr
+import sgr.utils
+import sgr.sgr_data
 
 
 
@@ -72,13 +74,14 @@ class SignalQCdf():
         self.SID =  self.snc.variables['ID'][:]
         self.STime = self.snc.variables['time'][:]
 
-    def findqfromsignal(self,signal,id):
+    def findqfromsignal(self,signal,statid):
         """
         Does cdf matching on Q and signal
 
         :param signal:
         :return:
         """
+        id = statid -1
         # First extract the matching times
         q = self.Q[id,:]
         s = self.Signal[id,:]
@@ -119,3 +122,21 @@ class SignalQCdf():
 
 
 
+def main():
+
+    logger = sgr.utils.setlogger('tt.log','sgr')
+    #get_gdac_file_by_date(skipifexists=True)
+    #get_modis_file_by_date(thedatetime=datetime.datetime(2016,2,2),skipifexists=True)
+    sgr.config = sgr.utils.iniFileSetUp('bbb.ini')
+    qnetcdf = sgr.utils.configget(logger,sgr.config,'data','qdbase', sgr.get_path_from_root('data/Beck_Runoff_Database_v3.nc'))
+    modissignalnetcdf = sgr.utils.configget(logger,sgr.config,'data','modissignaldbase',sgr.get_path_from_root('data/MODIS_SGR.nc'))
+    modiscellidlist = sgr.utils.configget(logger,sgr.config,'data','modisidlist',sgr.get_path_from_root('data/MODIS_SGR_cells.csv'))
+    staging=sgr.utils.configget(logger,sgr.config,'data','staging',sgr.get_path_from_root('staging/'))
+
+    sgrObj = sgr.sgr_data.SignalQCdf(qnetcdf,modissignalnetcdf)
+
+    tt = sgrObj.findqfromsignal(0.9,295)
+    print tt
+
+if __name__ == "__main__":
+    main()

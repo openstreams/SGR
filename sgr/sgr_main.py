@@ -123,9 +123,6 @@ def main(argv=None):
 
     if argv is None:
         argv = sys.argv[1:]
-        if len(argv) == 0:
-            usage()
-            return
 
     try:
         opts, args = getopt.getopt(argv, 'ho')
