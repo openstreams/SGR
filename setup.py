@@ -19,6 +19,12 @@ try:
 except:
     print("Could not import hdf5, make sure it is installed")
 
+datadir = os.path.join('sgr','data')
+datafiles = [(d, [os.path.join(d,f) for f in files])
+    for d, folders, files in os.walk(datadir)]
+
+print datafiles
+
 # Source dist
 setup(name='sgr',
       version= sgr.__version__ + '-' + sgr.__release__,
@@ -30,4 +36,5 @@ setup(name='sgr',
       license="GPL",
       scripts=[''],
       description='Satellite Gauging Reaches',
+      data_files = datafiles,
 )
