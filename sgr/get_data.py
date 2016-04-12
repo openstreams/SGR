@@ -145,7 +145,7 @@ def get_available_modis_files(years):
     for f in lst:
         filedir = str(f).split('"')[1]
         urlpath = urllib.urlopen(remotedir + '/' + filedir)
-        dirlisthtml =BeautifulSoup(urlpath.read())
+        dirlisthtml =BeautifulSoup(urlpath.read(),"lxml")
         res = dirlisthtml.findAll('a',text=re.compile(".hdf"))
         fn = str(res[0]).split('"')[1]
         filelocation = remotedir + '/' + filedir + '/' + fn
@@ -166,7 +166,7 @@ def get_last_available_modis_file():
     remotedir = "http://e4ftl01.cr.usgs.gov/MOTA/MCD43C4.005"
     now = datetime.datetime.now()
     urlpath = urllib.urlopen(remotedir)
-    dirlisthtml =BeautifulSoup(urlpath.read())
+    dirlisthtml =BeautifulSoup(urlpath.read(),'lxml')
 
     lst = dirlisthtml.findAll('a',text=re.compile(str(now.year -1)))
     lst.extend(dirlisthtml.findAll('a',text=re.compile(str(now.year))))
@@ -175,7 +175,7 @@ def get_last_available_modis_file():
     # last one is the dir with the most recent file
     filedir = str(lst[-1]).split('"')[1]
     urlpath = urllib.urlopen(remotedir + '/' + filedir)
-    dirlisthtml =BeautifulSoup(urlpath.read())
+    dirlisthtml =BeautifulSoup(urlpath.read(),'lxml')
     res = dirlisthtml.findAll('a',text=re.compile(".hdf"))
     lastfile = str(res[0]).split('"')[1]
 

@@ -31,9 +31,9 @@ import sgr.sgr_data
 import sgr.utils
 import sgr.fews
 import pandas
-
 import os, getopt, sys, glob
 import numpy as np
+import datetime
 
 
 def usage(*args):
@@ -85,6 +85,38 @@ def downloadandprocess(years,logger,staging='not set'):
     return localflist
 
 
+
+
+def downloadandprocesslist(lst,logger,staging='not set'):
+    """
+    :param lst: list files to get
+    :param logger:
+    :return: list of file avaiable after downloading
+    """
+    localflist = {}
+
+    # Loop of list of modis files
+    # NB This list is NOT sorted!
+    for url, value in lst.iteritems():
+        fname = os.path.basename(url)
+        lfilename = os.path.join(staging, fname)
+        if not os.path.exists(lfilename):
+            logger.info('Getting modis file:' + url)
+            sgr.get_data.httpdownloadurl(url,lfilename)
+        else:
+            logger.info('Skipping modis file: ' + url)
+        h5fname = lfilename.split('hdf')[0] + 'h5'
+        if not os.path.exists(h5fname):
+            sgr.get_data.converttohdf5(lfilename,h5fname)
+        else:
+            logger.info('Skipping modis file conversion to h5: ' + h5fname)
+
+        # create list of all available files
+        localflist[h5fname] = value
+
+    return localflist
+
+
 def getsignals(listofdates,QNC,SIGNALNC):
     """
 
@@ -96,7 +128,7 @@ def getsignals(listofdates,QNC,SIGNALNC):
     sgrObj = sgr.sgr_data.SignalQCdf(QNC,SIGNALNC)
 
 
-def mergedates(modisdates,requesteddates):
+def whichdatestoget(modisdates,requesteddates):
     """
     Match modis data and requested dates and comes back with a list
     of modis file to process and matchging requested dates
@@ -105,6 +137,23 @@ def mergedates(modisdates,requesteddates):
     :param requesteddates:
     :return:
     """
+
+    datesandfiles = {}
+    # Dtermien data range from the requested dates
+    a = np.array(requesteddates.keys())
+    firstdate = sorted(a[:,2])[0].date()
+    lastdate= sorted(a[:,2])[-1].date()
+
+    for key, val in modisdates.iteritems():
+        if val <= lastdate and val >= (firstdate - datetime.timedelta(days=30)):
+            datesandfiles[key] = val
+
+    return datesandfiles
+
+
+
+
+
 
 
 def main(argv=None):
@@ -144,15 +193,26 @@ def main(argv=None):
     modissignalnetcdf = sgr.utils.configget(logger,sgr.config,'data','modissignaldbase',sgr.get_path_from_root('data/MODIS_SGR.nc'))
     modiscellidlist = sgr.utils.configget(logger,sgr.config,'data','modisidlist',sgr.get_path_from_root('data/MODIS_SGR_cells.csv'))
     staging=sgr.utils.configget(logger,sgr.config,'data','staging',sgr.get_path_from_root('staging/'))
+    xmlinput = sgr.utils.configget(logger,sgr.config,'data','xmlinput',sgr.get_path_from_root('input/input.xml'))
 
+    # check the input data (requested output) from the XML
+    xmlinputdates = sgr.fews.readpixml(xmlinput)
+    keyar = np.array(xmlinputdates.keys())
+    stations = np.unique(keyar[:,0])
 
-    #url,fname = sgr.get_data.get_last_available_modis_file()
+    print xmlinputdates
+    # get the last year from the input
+    lastyear = (sorted(xmlinputdates.keys())[-1][2]).year
+    print lastyear
+    #url,fname = sgr.get_data.get_last_available_modis_file([lastyear])
 
-    #lst = sgr.get_data.get_available_modis_files([2014,2015,2016],logger)
+    lst = sgr.get_data.get_available_modis_files([lastyear])
 
+    modisfilelist = whichdatestoget(lst,xmlinputdates)
     #requesteddats = sgr.fews.readpixml('input/input.xml')
 
-    localfiles = downloadandprocess([2001],logger, staging=staging)
+    #localfiles = downloadandprocess([lastyear], logger, staging=staging)
+    localfiles = downloadandprocesslist(modisfilelist, logger, staging=staging)
 
 
     #Initialize the databse lookup object
@@ -168,16 +228,24 @@ def main(argv=None):
         wf = sgr.modis_waterfrac.detwfrac(swir21)
         # Her a loop over all station ID's
         result = []
+        result.append(localfiles[key])
         for stat in stations:
             logger.info('Getting signal data for station: ' + str(stat))
-            sngid = sgr.sgr_data.get_signal_ids(stat, y, x, modiscellidlist)
+            sngid = sgr.sgr_data.get_signal_ids(int(stat), y, x, modiscellidlist)
             signal = wf[sngid].mean()
             # now initialize the lookup object
-            q= sgrObj.findqfromsignal(signal,stat)
-        results.append([localfiles[key],signal,q])
+            q= sgrObj.findqfromsignal(signal,int(stat))
+            result.append(q)
 
-        print str(localfiles[key]) + "," + str(q)
+        results.append(result)
 
+        print str(localfiles[key]) + "," + str(result)
+
+    # make this into a pandas array
+    modresults = pandas.DataFrame(np.array(results), index=pandas.DatetimeIndex(np.array(results)[:, 0]))
+    modresults.to_pickle("res.pkl")
+
+    inresults = pandas.DataFrame(np.array())
     #get_stationfrombeck('Beck_Runoff_Database_v3.nc',2)
 
 

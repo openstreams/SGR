@@ -16,7 +16,7 @@ except:
     print("Could not import netCDF4, make sure it is installed")
 
 try:
-    import hdf5
+    import h5py
 except:
     print("Could not import hdf5, make sure it is installed")
 
