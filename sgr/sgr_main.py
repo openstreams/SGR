@@ -18,10 +18,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
+sgr_main - command-line processing for satreach
 
+usage:
 
     -h show this information
-    -o run offline, only use the data available in the locate database
+    -c inifile
 
 """
 import sgr
@@ -174,17 +176,17 @@ def main(argv=None):
         argv = sys.argv[1:]
 
     try:
-        opts, args = getopt.getopt(argv, 'ho')
+        opts, args = getopt.getopt(argv, 'hc')
     except getopt.error, msg:
         usage(msg)
 
 
     for o, a in opts:
         if o == '-h': usage()
-        if o == '-o': offline = True
+        if o == '-c': inifname = a
 
 
-
+    # set logger and get settings from config file
     logger = sgr.utils.setlogger(logfname,'sgr')
     #get_gdac_file_by_date(skipifexists=True)
     #get_modis_file_by_date(thedatetime=datetime.datetime(2016,2,2),skipifexists=True)
@@ -194,19 +196,22 @@ def main(argv=None):
     modiscellidlist = sgr.utils.configget(logger,sgr.config,'data','modisidlist',sgr.get_path_from_root('data/MODIS_SGR_cells.csv'))
     staging=sgr.utils.configget(logger,sgr.config,'data','staging',sgr.get_path_from_root('staging/'))
     xmlinput = sgr.utils.configget(logger,sgr.config,'data','xmlinput',sgr.get_path_from_root('input/input.xml'))
+    xmloutput_q = sgr.utils.configget(logger,sgr.config,'data','q_output',sgr.get_path_from_root('output/Q.xml'))
+    xmloutput_s = sgr.utils.configget(logger, sgr.config, 'data', 'signal_output', sgr.get_path_from_root('output/Signal.xml'))
 
     # check the input data (requested output) from the XML
     xmlinputdates = sgr.fews.readpixml(xmlinput)
     keyar = np.array(xmlinputdates.keys())
     stations = np.unique(keyar[:,0])
 
-    print xmlinputdates
-    # get the last year from the input
+    # Get modis data in batches of years
     lastyear = (sorted(xmlinputdates.keys())[-1][2]).year
-    print lastyear
-    #url,fname = sgr.get_data.get_last_available_modis_file([lastyear])
-
-    lst = sgr.get_data.get_available_modis_files([lastyear])
+    firstyear = (sorted(xmlinputdates.keys())[0][2]).year
+    firstmonth = (sorted(xmlinputdates.keys())[0][2]).month
+    if firstmonth ==1:
+        firstyear = firstyear -1
+    yrs = range(firstyear,lastyear+1)
+    lst = sgr.get_data.get_available_modis_files(yrs)
 
     modisfilelist = whichdatestoget(lst,xmlinputdates)
     #requesteddats = sgr.fews.readpixml('input/input.xml')
@@ -220,33 +225,42 @@ def main(argv=None):
 
     #getsignals(xxx,qnetcdf,modissignalnetcdf)
     #now loop over all files
-    results = []
+    resultss = []
+    resultsq = []
     for key in sorted(localfiles):
         logger.info('Reading modis file, converting to waterfrac: ' + key)
         x,y,swir21 = sgr.modis_waterfrac.readmodisswir21(key)
 
         wf = sgr.modis_waterfrac.detwfrac(swir21)
-        # Her a loop over all station ID's
-        result = []
-        result.append(localfiles[key])
+        # Here a loop over all station ID's
+        result_q = []
+        result_q.append(localfiles[key])
+        result_s = []
+        result_s.append(localfiles[key])
+        # Extract data fro all stations
         for stat in stations:
             logger.info('Getting signal data for station: ' + str(stat))
             sngid = sgr.sgr_data.get_signal_ids(int(stat), y, x, modiscellidlist)
             signal = wf[sngid].mean()
             # now initialize the lookup object
+            result_s.append(signal)
             q= sgrObj.findqfromsignal(signal,int(stat))
-            result.append(q)
+            result_q.append(q)
 
-        results.append(result)
+        resultss.append(result_s)
+        resultsq.append(result_q)
 
-        print str(localfiles[key]) + "," + str(result)
+        print str(localfiles[key]) + "," + str(result_q)
 
     # make this into a pandas array
-    modresults = pandas.DataFrame(np.array(results), index=pandas.DatetimeIndex(np.array(results)[:, 0]))
-    modresults.to_pickle("res.pkl")
+    modresultss = pandas.DataFrame(np.array(resultss)[:, 1:], index=pandas.DatetimeIndex(np.array(resultss)[:, 0]))
+    modresultss.columns= list(stations)
 
-    inresults = pandas.DataFrame(np.array())
-    #get_stationfrombeck('Beck_Runoff_Database_v3.nc',2)
+    modresultsq = pandas.DataFrame(np.array(resultsq)[:, 1:], index=pandas.DatetimeIndex(np.array(resultsq)[:, 0]))
+    modresultsq.columns = list(stations)
+    sgr.fews.pandastopixml(modresultss,xmloutput_s,'S')
+    sgr.fews.pandastopixml(modresultsq, xmloutput_q,'Q')
+
 
 
 if __name__ == "__main__":

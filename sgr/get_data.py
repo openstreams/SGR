@@ -42,7 +42,7 @@ def get_modis_file_by_date(thedatetime=None,skipifexists=True):
                     "/MCD43C4.A" + curyear + yday
     remotedir = producstr + curyear + "." + curmonth + "." + curday
     urlpath = urllib.urlopen(remotedir)
-    dirs = BeautifulSoup(urlpath.read())
+    dirs = BeautifulSoup(urlpath.read(),'lxml')
     fn = dirs.select('a[href*=hdf]')
     thename = str(fn[0]).split('\"')[1]
 
@@ -133,7 +133,7 @@ def get_available_modis_files(years):
     remotedir = "http://e4ftl01.cr.usgs.gov/MOTA/MCD43C4.005"
     now = datetime.datetime.now()
     urlpath = urllib.urlopen(remotedir)
-    dirlisthtml =BeautifulSoup(urlpath.read())
+    dirlisthtml =BeautifulSoup(urlpath.read(),'lxml')
 
     lst = dirlisthtml.findAll('a',text=re.compile(str(years[0])))
     for year in years[1:len(years)]:

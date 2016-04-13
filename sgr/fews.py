@@ -224,41 +224,24 @@ def readpixml(nname):
 
 
 
-def tss_topixml(tssfile,xmlfile,locationname,parametername,Sdate,timestep):
+def pandastopixml(p_dataframe,xmlfile,parametername):
     """
-    Converts a .tss file to a PI-xml file
 
     """
     missval = "-999.0"
 
-    #try:
-    tss,header = pcrut.readtss(tssfile)
+    pavg =p_dataframe.resample('M').ffill()
+    pavg.to_csv(xmlfile)
 
-    #except:
-    #    logger.error("Tss file not found or corrupt: ", tssfile)
-    #    return
 
-    # Add dummpy first timesteps
-    if len(tss.shape) > 1:
-        dumm = tss[0,:].copy()
-        dumm[:] = -999.0
-        tss =  pcrut.numpy.vstack((dumm,tss))
-    else:
-        dumm = tss.copy()
-        dumm[:] = -999.0
-        tss =  pcrut.numpy.vstack((dumm,tss))
+    #return None
 
-    # replace NaN with missing values
-    tss[pcrut.numpy.isnan(tss)] = missval
+    Sdate = pavg.index.date[0]
+    Edate = pavg.index.date[-1]
 
-    trange = timedelta(seconds=timestep * (tss.shape[0]))
 
-    extraday = timedelta(seconds=timestep)
-    #extraday = timedelta(seconds=0)
-    #Sdate = Sdate + extraday
-    #Edate = Sdate + trange - extraday
-    Sdate = Sdate + extraday
-    Edate = Sdate + trange - extraday - extraday
+
+    trange = Edate - Sdate
 
     Sdatestr = Sdate.strftime('%Y-%m-%d')
     Stimestr = Sdate.strftime('%H:%M:%S')
@@ -271,35 +254,34 @@ def tss_topixml(tssfile,xmlfile,locationname,parametername,Sdate,timestep):
     ofile.write("<timeZone>0.0</timeZone>\n")
     count = 0
 
-    for col in tss.transpose():
+    for col in pavg.columns:
         count = count + 1
         ofile.write("<series>\n")
         ofile.write("<header>\n")
         ofile.write("<type>instantaneous</type>\n")
-        ofile.write("<locationId>" + header[count-1] + "</locationId>\n")
+        ofile.write("<locationId>" + str(col) + "</locationId>\n")
         ofile.write("<parameterId>" + parametername + "</parameterId>\n")
-        ofile.write("<timeStep unit=\"second\" multiplier=\"" + str(timestep) + "\"/>\n")
+        ofile.write("<timeStep unit=\"nonequidistant\"/>\n")
         ofile.write("<startDate date=\"" + Sdatestr +"\" time=\""+ Stimestr + "\"/>\n")
         ofile.write("<endDate date=\"" + Edatestr + "\" time=\"" + Etimestr + "\"/>\n")
         ofile.write("<missVal>"+str(missval)+"</missVal>\n")
-        ofile.write("<stationName>" + header[count-1] +  "</stationName>\n")
+        ofile.write("<stationName>" + str(col) +  "</stationName>\n")
         ofile.write("</header>\n")
         # add data here
         xdate = Sdate
-        xcount = 1
-        for pt in col:
-            if xcount > 1:
-                Ndatestr = xdate.strftime('%Y-%m-%d')
-                Ntimestr = xdate.strftime('%H:%M:%S')
-                ofile.write("<event date=\"" + Ndatestr + "\" time=\"" + Ntimestr + "\" value=\"" + str(pt) + "\" />\n")
-                xdate = xdate + timedelta(seconds=timestep)
+        xcount = 0
+        for pt in pavg[col].values:
+            xdate = pavg.index[xcount].date()
+            Ndatestr = xdate.strftime('%Y-%m-%d')
+            Ntimestr = xdate.strftime('%H:%M:%S')
+            ofile.write("<event date=\"" + Ndatestr + "\" time=\"" + Ntimestr + "\" value=\"" + str(pt) + "\" />\n")
             xcount = xcount + 1
         ofile.write("</series>\n")
 
     ofile.write("</TimeSeries>\n")
     ofile.close()
 
-    return tss
+    return None
 
 
 def getTimeStepsfromRuninfo(xmlfile,timestepsecs):
