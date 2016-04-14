@@ -168,26 +168,18 @@ def readpixml(nname):
 
 
 
-def pandastopixml(p_dataframe,xmlfile,parametername):
+def pandastopixml(pavg,xmlfile,parametername):
     """
 
     """
     missval = "-999.0"
-    #TODO averaging shoudl go somewhere else
 
-    pavg =p_dataframe.resample('M').ffill()
-    pavg.to_csv(xmlfile)
-
-
-    #return None
+    #pavg.to_csv(xmlfile)
 
     Sdate = pavg.index.date[0]
     Edate = pavg.index.date[-1]
 
-
-
     trange = Edate - Sdate
-
     Sdatestr = Sdate.strftime('%Y-%m-%d')
     Stimestr = Sdate.strftime('%H:%M:%S')
 

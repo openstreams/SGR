@@ -264,8 +264,16 @@ def main(argv=None):
 
     modresultsq = pandas.DataFrame(np.array(resultsq)[:, 1:], index=pandas.DatetimeIndex(np.array(resultsq)[:, 0]))
     modresultsq.columns = list(stations)
-    sgr.fews.pandastopixml(modresultss,xmloutput_s,'S')
-    sgr.fews.pandastopixml(modresultsq, xmloutput_q,'Q')
+
+    # name make into monthly average
+    qavg =modresultsq.resample('M').ffill()
+    savg = modresultss.resample('M').ffill()
+
+
+    sgr.fews.pandastopixml(savg,xmloutput_s,'S')
+    sgr.fews.pandastopixml(qavg, xmloutput_q,'Q')
+    sgr.fews.pandastopixml(modresultss,xmloutput_s + "_.xml",'S')
+    sgr.fews.pandastopixml(modresultsq, xmloutput_q+ "_.xml",'Q')
     logger.info('sgr ended sucessfully')
 
 
