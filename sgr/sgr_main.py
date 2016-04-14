@@ -163,6 +163,7 @@ def main(argv=None):
     :param argv:
     :return:
     """
+    #TODO: Add error determination
 
     inifname = 'not set'
     logfname = 'sgr.log'
@@ -231,6 +232,7 @@ def main(argv=None):
 
     #getsignals(xxx,qnetcdf,modissignalnetcdf)
     #now loop over all files
+    # TODO: Add second pass to get month Q from monthly average signal
     resultss = []
     resultsq = []
     for key in sorted(localfiles):
