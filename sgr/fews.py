@@ -1,79 +1,20 @@
-# Test version of wflow Delft-FEWS adapter
-#
-# Wflow is Free software, see below:
-#
-# Copyright (c) J. Schellekens 2005-2011
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
-wflow_adapt.py: Simple wflow Delft-FEWS adapter in python. This file can be run
-as a script from the command-line or be used as a module that provides (limited)
-functionality for converting PI-XML files to .tss and back.
-
-*Usage pre adapter:*
-
-**wflow_adapt** -M Pre -t InputTimeseriesXml -I inifile -T timestepInSeconds
-
-*Usage postadapter:*
-
-**wflow_adapt**-M Post -t InputTimeseriesXml -s inputStateFile -I inifile
-              -o outputStateFile -r runinfofile -w workdir -C case -T timestepInSeconds [-R runId]
-
-Issues:
-
-- Delft-Fews exports data from 0 to timestep. PCraster starts to count at 1.
-  Renaming the files is not desireable. The solution is the add a delay of 1
-  timestep in the GA run that exports the mapstacks to wflow.
-- Not tested very well.
-- There is a considerable amount of duplication (e.g. info in the runinfo.xml and
-  the .ini file that you need to specify again :-())
-
- .. todo::
-
-     rewrite and simplify
-
-$Author: schelle $
-$Id: wflow_adapt.py 915 2014-02-10 07:33:56Z schelle $
-$Rev: 915 $
-
-"""
-
 import getopt, sys, os
-
 from xml.etree.ElementTree import *
-
 from datetime import *
 import time
 import string
-
 import shutil
 import re
 from glob import *
 import logging
 import logging.handlers
 import ConfigParser
+import numpy
 
 
 
 
 
-outMaps = ["run.xml","lev.xml"]
-iniFile = "wflow_sbm.ini"
-case = "not_set"
-runId="run_default"
-
-logfile = "wflow_adapt.log"
 
 def make_uniek(seq, idfun=None):
     # Order preserving
@@ -232,6 +173,7 @@ def pandastopixml(p_dataframe,xmlfile,parametername):
 
     """
     missval = "-999.0"
+    #TODO averaging shoudl go somewhere else
 
     pavg =p_dataframe.resample('M').ffill()
     pavg.to_csv(xmlfile)
@@ -277,6 +219,8 @@ def pandastopixml(p_dataframe,xmlfile,parametername):
             xdate = pavg.index[xcount].date()
             Ndatestr = xdate.strftime('%Y-%m-%d')
             Ntimestr = xdate.strftime('%H:%M:%S')
+            if not numpy.isfinite(pt):
+                pt = -999.0
             ofile.write("<event date=\"" + Ndatestr + "\" time=\"" + Ntimestr + "\" value=\"" + str(pt) + "\" />\n")
             xcount = xcount + 1
         ofile.write("</series>\n")

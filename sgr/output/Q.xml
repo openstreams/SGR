@@ -43,8 +43,8 @@
 <stationName>395</stationName>
 </header>
 <event date="2014-12-31" time="00:00:00" value="13.4485281762" />
-<event date="2015-01-31" time="00:00:00" value="nan" />
-<event date="2015-02-28" time="00:00:00" value="nan" />
+<event date="2015-01-31" time="00:00:00" value="-999.0" />
+<event date="2015-02-28" time="00:00:00" value="-999.0" />
 </series>
 <series>
 <header>
@@ -59,7 +59,7 @@
 </header>
 <event date="2014-12-31" time="00:00:00" value="97.4133500494" />
 <event date="2015-01-31" time="00:00:00" value="226.264228956" />
-<event date="2015-02-28" time="00:00:00" value="nan" />
+<event date="2015-02-28" time="00:00:00" value="-999.0" />
 </series>
 <series>
 <header>
@@ -132,7 +132,7 @@
 <missVal>-999.0</missVal>
 <stationName>933</stationName>
 </header>
-<event date="2014-12-31" time="00:00:00" value="nan" />
+<event date="2014-12-31" time="00:00:00" value="-999.0" />
 <event date="2015-01-31" time="00:00:00" value="1.25151936648e-05" />
 <event date="2015-02-28" time="00:00:00" value="0.0" />
 </series>
