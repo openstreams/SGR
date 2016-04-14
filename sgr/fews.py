@@ -216,6 +216,9 @@ def readpixml(nname):
                     val[loc,par,dt] = ev.attrib['value']
                 i = i+1
         nrevents = i
+    else:
+        print "cannot open xml file: " + nname
+        exit(-1)
 
 
     return val

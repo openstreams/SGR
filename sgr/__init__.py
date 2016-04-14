@@ -1,8 +1,8 @@
 __all__ = ["utils","get_data","modis_waterfrac","sgr_data"]
 
 __author__ = 'van Dijk/Schellekens'
-__version__ = '0.1'
-__release__ = "2016"
+__version__ = '2016.1'
+__release__ = "rc0"
 
 
 

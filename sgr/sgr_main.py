@@ -96,7 +96,6 @@ def downloadandprocesslist(lst,logger,staging='not set'):
     :return: list of file avaiable after downloading
     """
     localflist = {}
-
     # Loop of list of modis files
     # NB This list is NOT sorted!
     for url, value in lst.iteritems():
@@ -161,22 +160,20 @@ def whichdatestoget(modisdates,requesteddates):
 def main(argv=None):
     """
 
-
     :param argv:
     :return:
     """
 
-
-    inifname = 'sgr.ini'
+    inifname = 'not set'
     logfname = 'sgr.log'
-    stations = [1,4,295,300]
+
 
 
     if argv is None:
         argv = sys.argv[1:]
 
     try:
-        opts, args = getopt.getopt(argv, 'hc')
+        opts, args = getopt.getopt(argv, 'hc:')
     except getopt.error, msg:
         usage(msg)
 
@@ -185,12 +182,20 @@ def main(argv=None):
         if o == '-h': usage()
         if o == '-c': inifname = a
 
+    if 'not set' in inifname:
+        print "-c inifile command-line option must be used"
+        usage()
 
     # set logger and get settings from config file
     logger = sgr.utils.setlogger(logfname,'sgr')
     #get_gdac_file_by_date(skipifexists=True)
+    logger.info("Starting up sgr...")
     #get_modis_file_by_date(thedatetime=datetime.datetime(2016,2,2),skipifexists=True)
-    sgr.config = sgr.utils.iniFileSetUp(inifname)
+    if os.path.exists(inifname):
+        sgr.config = sgr.utils.iniFileSetUp(inifname)
+    else:
+        logger.error("Cannot open config file: " + inifname)
+        exit(-1)
     qnetcdf = sgr.utils.configget(logger,sgr.config,'data','qdbase', sgr.get_path_from_root('data/Beck_Runoff_Database_v3.nc'))
     modissignalnetcdf = sgr.utils.configget(logger,sgr.config,'data','modissignaldbase',sgr.get_path_from_root('data/MODIS_SGR.nc'))
     modiscellidlist = sgr.utils.configget(logger,sgr.config,'data','modisidlist',sgr.get_path_from_root('data/MODIS_SGR_cells.csv'))
@@ -211,6 +216,7 @@ def main(argv=None):
     if firstmonth ==1:
         firstyear = firstyear -1
     yrs = range(firstyear,lastyear+1)
+    logger.info("Getting list of available modis files...")
     lst = sgr.get_data.get_available_modis_files(yrs)
 
     modisfilelist = whichdatestoget(lst,xmlinputdates)
@@ -260,6 +266,7 @@ def main(argv=None):
     modresultsq.columns = list(stations)
     sgr.fews.pandastopixml(modresultss,xmloutput_s,'S')
     sgr.fews.pandastopixml(modresultsq, xmloutput_q,'Q')
+    logger.info('sgr ended sucessfully')
 
 
 

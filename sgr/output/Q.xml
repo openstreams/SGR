@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TimeSeries xmlns="http://www.wldelft.nl/fews/PI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.wldelft.nl/fews/PI http://fews.wldelft.nl/schemas/version1.0/pi-schemas/pi_timeseries.xsd" version="1.2">
+<timeZone>0.0</timeZone>
+<series>
+<header>
+<type>instantaneous</type>
+<locationId>230</locationId>
+<parameterId>Q</parameterId>
+<timeStep unit="nonequidistant"/>
+<startDate date="2014-12-31" time="00:00:00"/>
+<endDate date="2015-02-28" time="00:00:00"/>
+<missVal>-999.0</missVal>
+<stationName>230</stationName>
+</header>
+<event date="2014-12-31" time="00:00:00" value="0.00170967460021" />
+<event date="2015-01-31" time="00:00:00" value="0.00055749662741" />
+<event date="2015-02-28" time="00:00:00" value="0.00109325701046" />
+</series>
+<series>
+<header>
+<type>instantaneous</type>
+<locationId>295</locationId>
+<parameterId>Q</parameterId>
+<timeStep unit="nonequidistant"/>
+<startDate date="2014-12-31" time="00:00:00"/>
+<endDate date="2015-02-28" time="00:00:00"/>
+<missVal>-999.0</missVal>
+<stationName>295</stationName>
+</header>
+<event date="2014-12-31" time="00:00:00" value="265.645894565" />
+<event date="2015-01-31" time="00:00:00" value="706.251372687" />
+<event date="2015-02-28" time="00:00:00" value="1299.98012977" />
+</series>
+<series>
+<header>
+<type>instantaneous</type>
+<locationId>395</locationId>
+<parameterId>Q</parameterId>
+<timeStep unit="nonequidistant"/>
+<startDate date="2014-12-31" time="00:00:00"/>
+<endDate date="2015-02-28" time="00:00:00"/>
+<missVal>-999.0</missVal>
+<stationName>395</stationName>
+</header>
+<event date="2014-12-31" time="00:00:00" value="13.4485281762" />
+<event date="2015-01-31" time="00:00:00" value="nan" />
+<event date="2015-02-28" time="00:00:00" value="nan" />
+</series>
+<series>
+<header>
+<type>instantaneous</type>
+<locationId>495</locationId>
+<parameterId>Q</parameterId>
+<timeStep unit="nonequidistant"/>
+<startDate date="2014-12-31" time="00:00:00"/>
+<endDate date="2015-02-28" time="00:00:00"/>
+<missVal>-999.0</missVal>
+<stationName>495</stationName>
+</header>
+<event date="2014-12-31" time="00:00:00" value="97.4133500494" />
+<event date="2015-01-31" time="00:00:00" value="226.264228956" />
+<event date="2015-02-28" time="00:00:00" value="nan" />
+</series>
+<series>
+<header>
+<type>instantaneous</type>
+<locationId>595</locationId>
+<parameterId>Q</parameterId>
+<timeStep unit="nonequidistant"/>
+<startDate date="2014-12-31" time="00:00:00"/>
+<endDate date="2015-02-28" time="00:00:00"/>
+<missVal>-999.0</missVal>
+<stationName>595</stationName>
+</header>
+<event date="2014-12-31" time="00:00:00" value="349.799646307" />
+<event date="2015-01-31" time="00:00:00" value="64.9978709613" />
+<event date="2015-02-28" time="00:00:00" value="23.7874474667" />
+</series>
+<series>
+<header>
+<type>instantaneous</type>
+<locationId>695</locationId>
+<parameterId>Q</parameterId>
+<timeStep unit="nonequidistant"/>
+<startDate date="2014-12-31" time="00:00:00"/>
+<endDate date="2015-02-28" time="00:00:00"/>
+<missVal>-999.0</missVal>
+<stationName>695</stationName>
+</header>
+<event date="2014-12-31" time="00:00:00" value="136.312264127" />
+<event date="2015-01-31" time="00:00:00" value="127.895952092" />
+<event date="2015-02-28" time="00:00:00" value="127.901043329" />
+</series>
+<series>
+<header>
+<type>instantaneous</type>
+<locationId>700</locationId>
+<parameterId>Q</parameterId>
+<timeStep unit="nonequidistant"/>
+<startDate date="2014-12-31" time="00:00:00"/>
+<endDate date="2015-02-28" time="00:00:00"/>
+<missVal>-999.0</missVal>
+<stationName>700</stationName>
+</header>
+<event date="2014-12-31" time="00:00:00" value="0.94030511118" />
+<event date="2015-01-31" time="00:00:00" value="2.71039432429" />
+<event date="2015-02-28" time="00:00:00" value="2.31561343359" />
+</series>
+<series>
+<header>
+<type>instantaneous</type>
+<locationId>800</locationId>
+<parameterId>Q</parameterId>
+<timeStep unit="nonequidistant"/>
+<startDate date="2014-12-31" time="00:00:00"/>
+<endDate date="2015-02-28" time="00:00:00"/>
+<missVal>-999.0</missVal>
+<stationName>800</stationName>
+</header>
+<event date="2014-12-31" time="00:00:00" value="21.487167342" />
+<event date="2015-01-31" time="00:00:00" value="22.1864882293" />
+<event date="2015-02-28" time="00:00:00" value="25.4288122175" />
+</series>
+<series>
+<header>
+<type>instantaneous</type>
+<locationId>933</locationId>
+<parameterId>Q</parameterId>
+<timeStep unit="nonequidistant"/>
+<startDate date="2014-12-31" time="00:00:00"/>
+<endDate date="2015-02-28" time="00:00:00"/>
+<missVal>-999.0</missVal>
+<stationName>933</stationName>
+</header>
+<event date="2014-12-31" time="00:00:00" value="nan" />
+<event date="2015-01-31" time="00:00:00" value="1.25151936648e-05" />
+<event date="2015-02-28" time="00:00:00" value="0.0" />
+</series>
+</TimeSeries>

@@ -28,14 +28,14 @@ print datafiles
 
 # Source dist
 setup(name='sgr',
-      version= sgr.__version__ + '-' + sgr.__release__,
+      version= sgr.__version__ +  sgr.__release__,
       packages=['sgr'],
       package_dir={'sgr': 'sgr'},
       author='A.I.J.M. van Dijk/J. Schellekens',
       author_email='albert.vandijk@anu.edu.au/jaap.schellekens@deltares.nl',
       url='http://not yet',
       license="GPL",
-      scripts=[''],
+      scripts=['sgr/sgr_main.py'],
       description='Satellite Gauging Reaches',
       data_files = datafiles,
 )
