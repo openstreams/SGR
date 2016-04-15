@@ -168,8 +168,6 @@ def main(argv=None):
     inifname = 'not set'
     logfname = 'sgr.log'
 
-
-
     if argv is None:
         argv = sys.argv[1:]
 
@@ -177,7 +175,6 @@ def main(argv=None):
         opts, args = getopt.getopt(argv, 'hc:')
     except getopt.error, msg:
         usage(msg)
-
 
     for o, a in opts:
         if o == '-h': usage()
@@ -226,7 +223,6 @@ def main(argv=None):
     #localfiles = downloadandprocess([lastyear], logger, staging=staging)
     localfiles = downloadandprocesslist(modisfilelist, logger, staging=staging)
 
-
     #Initialize the databse lookup object
     sgrObj = sgr.sgr_data.SignalQCdf(qnetcdf,modissignalnetcdf)
 
@@ -271,9 +267,12 @@ def main(argv=None):
     qavg =modresultsq.resample('M').ffill()
     savg = modresultss.resample('M').ffill()
 
+    # Now rerun with monthly signal input
+    qbest = sgr.sgr_data.signaltoq_pandas(savg,qnetcdf,modissignalnetcdf)
 
     sgr.fews.pandastopixml(savg,xmloutput_s,'S')
     sgr.fews.pandastopixml(qavg, xmloutput_q,'Q')
+    sgr.fews.pandastopixml(qbest, xmloutput_q + "_best.xml", 'Q')
     sgr.fews.pandastopixml(modresultss,xmloutput_s + "_.xml",'S')
     sgr.fews.pandastopixml(modresultsq, xmloutput_q+ "_.xml",'Q')
     logger.info('sgr ended sucessfully')

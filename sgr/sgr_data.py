@@ -4,7 +4,27 @@ import netCDF4
 
 import sgr
 import sgr.utils
-import sgr.sgr_data
+import pandas
+
+
+
+def signaltoq_pandas(signalframe,qnetcdf, modissignalnetcdf):
+    """
+    Retrieves Q estimates for all points in the pandas dataframe
+    Column header are interpreted as station id's
+
+    :param signal dataframe:
+    :return pandas dateframe with Q:
+    """
+
+    sgrObj = sgr.sgr_data.SignalQCdf(qnetcdf, modissignalnetcdf)
+    qdf = pandas.DataFrame(columns=signalframe.columns, index=signalframe.index)
+
+    for col in signalframe.columns:
+        for i in signalframe.index:
+            qdf[col][i] = sgrObj.findqfromsignal(signalframe[col][i],int(col))
+
+    return qdf
 
 
 
@@ -13,6 +33,7 @@ def getcellloc(id,cellidlist):
     get the cell x,y coordinates for a given reach id
 
     :param id:
+    :param cellidlist: csv file with id's and x,y coordinates (8 per cell)
     :return:
     """
     # assume the id''s match the line numbers
@@ -123,6 +144,7 @@ class SignalQCdf():
 
 
 def main():
+    # for testing only
 
     logger = sgr.utils.setlogger('tt.log','sgr')
     #get_gdac_file_by_date(skipifexists=True)
