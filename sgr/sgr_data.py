@@ -142,11 +142,74 @@ class SignalQCdf():
             return yest
 
 
+def geterrorparameters(Q,Qest,nrintervals=5.):
+    """
+
+    :param Q: Measured Q
+    :param Qest: Estimated Q
+    :param nrintervals:
+    :return:
+    """
+
+
+    # Loop over columns in pandas dataframe
+    for col in Q.columns:
+        qest = Qest[col].values
+        q = Q[col].values
+        # First extract the matching times
+        qestvalid = np.isfinite(qest)
+        qvalid = np.isfinite(q)
+        validpoinst = np.logical_and(qvalid, qestvalid)
+
+        percentiles = np.arange(1./nrintervals,1+1./nrintervals,nrintervals)
+        yestHI = 12
+
+        for i in np.arange(0,nrintervals):
+            lowboun = np.percentile(qest[validpoinst],percentiles[i])
+            highboun = np.percentile(qest[validpoinst], percentiles[i + 1])
+
+    #a_qs = np.sort(self.Q[id,validpoinst])
+    #a_ss = np.sort(self.Signal[id,validpoinst])
+    # Make sorted array
+        qest_ = np.sort(qest)
+        for i in np.arange(0,len(q)):
+
+            hi = np.searchsorted(a_ss, signal)
+
+            extrapolate = True if signalpos > len(a_qs) - 1 else False
+            if not extrapolate:
+                perfectmatch = True if a_ss[signalpos] == signal else False
+            else:
+                perfectmatch = False
+
+            atlowedge = True if signalpos == 0 else False
+            # In this case we can safely return the matching Q value
+            if perfectmatch and not extrapolate:
+                return a_qs[signalpos]
+
+            # interpolate
+            if not extrapolate and not atlowedge:
+                slope = (a_qs[signalpos] - a_qs[signalpos - 1]) / (a_ss[signalpos] - a_ss[signalpos - 1])
+                yest = a_qs[signalpos - 1] + slope * (signal - a_ss[signalpos - 1])
+                return yest
+
+            if extrapolate:
+                slope = (a_qs[len(a_qs) - 1] - a_qs[len(a_qs) - 2]) / (a_ss[len(a_qs) - 1] - a_ss[len(a_qs) - 2])
+                yest = a_qs[len(a_qs) - 1] + slope * (signal - a_ss[len(a_qs) - 1])
+                return yest
+
+            if atlowedge:
+                slope = (a_qs[1] - a_qs[0]) / (a_ss[1] - a_ss[0])
+                yest = a_qs[0] + slope * (signal - a_ss[0])
+                yest = max(yest, 0.0)
+                return yest
+
+
 
 def main():
     # for testing only
 
-    logger = sgr.utils.setlogger('tt.log','sgr')
+    logger = sgr.utils.setlogger('sgr.log','sgr')
     #get_gdac_file_by_date(skipifexists=True)
     #get_modis_file_by_date(thedatetime=datetime.datetime(2016,2,2),skipifexists=True)
     sgr.config = sgr.utils.iniFileSetUp('bbb.ini')
