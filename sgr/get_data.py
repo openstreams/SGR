@@ -92,7 +92,7 @@ def converttohdf5(fname,h5name):
 
 
 
-def get_gdac_file_by_date(thedatetime=None,skipifexists=True):
+def get_gdac_file_by_date(thedatetime=None):
     """
     gets a file for a date. If date is not given the
     current date is used.
@@ -110,23 +110,42 @@ def get_gdac_file_by_date(thedatetime=None,skipifexists=True):
     curday = "%02d" % now.day
     localfname = curyear + curmonth + curday + ".tif"
 
-    if not os.path.exists(localfname):
-        try:
-            fname = "http://www.gdacs.org/flooddetection/data/ALL/AvgSignalTiffs/" + curyear +\
+
+    fname = "http://www.gdacs.org/flooddetection/data/ALL/AvgSignalTiffs/" + curyear +\
                     "/" + curmonth + "/signal_4days_avg_4days_"+ curyear + curmonth + curday + ".tif"
-            fn, head = urllib.urlretrieve(fname, localfname)
-        except:
-            return None
 
-    return localfname
+    return fname
 
+
+def readgfds(fname):
+    """
+
+    :param fname:
+    :return:
+    """
+    resX, resY, cols, rows, x, y, data, FillVal = sgr.utils.readMap(fname, 'GTiff',None)
+
+    return x,y,data
+
+
+def get_available_gdac_files(datestart,dateend):
+
+    datelist =  [datestart + datetime.timedelta(days=x) for x in range(0, (dateend-datestart).days)]
+
+    ret = {}
+
+    for thedate in datelist:
+        urll = get_gdac_file_by_date(thedate)
+        ret[urll] = thedate
+
+    return ret
 
 
 def get_available_modis_files(years):
     """
     input list of year
 
-    :return: list of all availble dates
+    :return: list of all available dates
     """
     url_date = {}
 
@@ -201,8 +220,10 @@ def get_stationfrombeck(fname,id):
 def main(argv=None):
     #get_gdac_file_by_date(skipifexists=True)
     #get_modis_file_by_date(thedatetime=datetime.datetime(2016,2,2),skipifexists=True)
+    s = datetime.datetime(2016,4,1)
+    e = datetime.datetime(2016,4,10)
 
-    lst = get_available_modis_files([2014,2015,2016])
+    lst = get_available_gdac_files(s,e)
     print lst
     #url,fname = get_last_available_modis_file()
     #lfilename = os.path.join(stagingarea, fname)

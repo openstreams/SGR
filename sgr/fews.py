@@ -196,8 +196,12 @@ def pandastopixml(pavg,xmlfile,parametername):
         ofile.write("<series>\n")
         ofile.write("<header>\n")
         ofile.write("<type>instantaneous</type>\n")
-        ofile.write("<locationId>" + str(col) + "</locationId>\n")
-        ofile.write("<parameterId>" + parametername + "</parameterId>\n")
+        if '_h' in col or '_l' in col:
+            ofile.write("<locationId>" + str(col).strip('_h') + "</locationId>\n")
+            ofile.write("<parameterId>" + parametername + '_' + col[-1] + "</parameterId>\n")
+        else:
+            ofile.write("<locationId>" + str(col) + "</locationId>\n")
+            ofile.write("<parameterId>" + parametername + "</parameterId>\n")
         ofile.write("<timeStep unit=\"nonequidistant\"/>\n")
         ofile.write("<startDate date=\"" + Sdatestr +"\" time=\""+ Stimestr + "\"/>\n")
         ofile.write("<endDate date=\"" + Edatestr + "\" time=\"" + Etimestr + "\"/>\n")

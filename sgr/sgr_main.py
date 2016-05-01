@@ -118,6 +118,33 @@ def downloadandprocesslist(lst,logger,staging='not set'):
     return localflist
 
 
+
+def downloadandprocesslistgdac(lst,logger,staging='not set'):
+    """
+    :param lst: list files to get
+    :param logger:
+    :return: list of file avaiable after downloading
+    """
+    localflist = {}
+    # Loop of list of modis files
+    # NB This list is NOT sorted!
+    for url, value in lst.iteritems():
+        fname = os.path.basename(url)
+        lfilename = os.path.join(staging, fname)
+        if not os.path.exists(lfilename):
+            logger.info('Getting gdac file:' + url)
+            sgr.get_data.httpdownloadurl(url,lfilename)
+        else:
+            logger.info('Skipping gdac file: ' + url)
+        h5fname = lfilename.split('hdf')[0] + 'h5'
+
+
+        # create list of all available files
+        localflist[lfilename] = value
+
+    return localflist
+
+
 def getsignals(listofdates,QNC,SIGNALNC):
     """
 
@@ -196,7 +223,12 @@ def main(argv=None):
         exit(-1)
     qnetcdf = sgr.utils.configget(logger,sgr.config,'data','qdbase', sgr.get_path_from_root('data/Beck_Runoff_Database_v3.nc'))
     modissignalnetcdf = sgr.utils.configget(logger,sgr.config,'data','modissignaldbase',sgr.get_path_from_root('data/MODIS_SGR.nc'))
+    gfdssignalnetcdf = sgr.utils.configget(logger, sgr.config, 'data', 'gfdssignaldbase',
+                                            sgr.get_path_from_root('data/GFDS_SGR.nc'))
     modiscellidlist = sgr.utils.configget(logger,sgr.config,'data','modisidlist',sgr.get_path_from_root('data/MODIS_SGR_cells.csv'))
+    gfdscellidlist = sgr.utils.configget(logger, sgr.config, 'data', 'gfdsidlist',
+                                          sgr.get_path_from_root('data/GFDS_SGR_cells.csv'))
+
     staging=sgr.utils.configget(logger,sgr.config,'data','staging',sgr.get_path_from_root('staging/'))
     xmlinput = sgr.utils.configget(logger,sgr.config,'data','xmlinput',sgr.get_path_from_root('input/input.xml'))
     xmloutput_q = sgr.utils.configget(logger,sgr.config,'data','q_output',sgr.get_path_from_root('output/Q.xml'))
@@ -206,6 +238,55 @@ def main(argv=None):
     xmlinputdates = sgr.fews.readpixml(xmlinput)
     keyar = np.array(xmlinputdates.keys())
     stations = np.unique(keyar[:,0])
+
+    # Generate the list of 4day average gdac fils
+    gdacfilelists =  sgr.get_data.get_available_gdac_files((sorted(xmlinputdates.keys())[0][2]),\
+                                                           (sorted(xmlinputdates.keys())[-1][2]))
+
+    localgdacfiles = downloadandprocesslistgdac(gdacfilelists, logger, staging=staging)
+    # Inilialize the lookup database
+    sgrObjgfds = sgr.sgr_data.SignalQCdf(qnetcdf,gfdssignalnetcdf)
+    sgrObjgfds.MKerrmodel(statids=stations)
+
+    resultss = []
+    resultsq = []
+    for key in sorted(localgdacfiles):
+        logger.info("Reading GFDS tiff file: " + str(key))
+        x,y, gfdssignal=sgr.get_data.readgfds(key)
+        # Here a loop over all station ID's
+        result_q = []
+        result_q.append(localgdacfiles[key])
+        result_s = []
+        result_s.append(localgdacfiles[key])
+        for stat in stations:
+            gfdssigid = sgr.sgr_data.get_signal_ids(int(stat), y, x, gfdscellidlist)
+            signal = gfdssignal[gfdssigid].mean()
+            result_s.append(signal)
+            result_q.append(sgrObjgfds.findqfromsignal(signal, int(stat)))
+
+        resultss.append(result_s)
+        resultsq.append(result_q)
+
+    # make this into a pandas array
+    # Column id is station id
+    gfdsresultss = pandas.DataFrame(np.array(resultss)[:, 1:], index=pandas.DatetimeIndex(np.array(resultss)[:, 0]))
+    gfdsresultss.columns = list(stations)
+
+    gfdsresultsq = pandas.DataFrame(np.array(resultsq)[:, 1:], index=pandas.DatetimeIndex(np.array(resultsq)[:, 0]))
+    gfdsresultsq.columns = list(stations)
+
+    # name make into monthly average
+    qavggfds = gfdsresultsq.resample('M').ffill()
+    savggfds = gfdsresultss.resample('M').ffill()
+    # Now rerun with monthly signal input
+    qbest = sgr.sgr_data.signaltoq_pandas(savggfds, qnetcdf, gfdssignalnetcdf)
+
+    sgr.fews.pandastopixml(savggfds, xmloutput_s + '_GFDS.xml', 'S')
+    sgr.fews.pandastopixml(qavggfds, xmloutput_q+ '_GFDS.xml', 'Q')
+    sgr.fews.pandastopixml(qbest, xmloutput_q + "_GFDS_best.xml", 'Q')
+    sgr.fews.pandastopixml(gfdsresultss, xmloutput_s + "_GFDS_.xml", 'S')
+    sgr.fews.pandastopixml(gfdsresultsq, xmloutput_q + "_GFDS_.xml", 'Q')
+
 
     # Get modis data in batches of years
     lastyear = (sorted(xmlinputdates.keys())[-1][2]).year
@@ -218,17 +299,13 @@ def main(argv=None):
     lst = sgr.get_data.get_available_modis_files(yrs)
 
     modisfilelist = whichdatestoget(lst,xmlinputdates)
-    #requesteddats = sgr.fews.readpixml('input/input.xml')
-
-    #localfiles = downloadandprocess([lastyear], logger, staging=staging)
     localfiles = downloadandprocesslist(modisfilelist, logger, staging=staging)
 
-    #Initialize the databse lookup object
+    #Initialize the databsse lookup object
     sgrObj = sgr.sgr_data.SignalQCdf(qnetcdf,modissignalnetcdf)
+    # Run the error model in the object to fill it with the current stations nlu
+    sgrObj.MKerrmodel(statids=stations)
 
-    #getsignals(xxx,qnetcdf,modissignalnetcdf)
-    #now loop over all files
-    # TODO: Add second pass to get month Q from monthly average signal
     resultss = []
     resultsq = []
     for key in sorted(localfiles):
@@ -254,9 +331,9 @@ def main(argv=None):
         resultss.append(result_s)
         resultsq.append(result_q)
 
-        print str(localfiles[key]) + "," + str(result_q)
 
     # make this into a pandas array
+    # Column id is station id
     modresultss = pandas.DataFrame(np.array(resultss)[:, 1:], index=pandas.DatetimeIndex(np.array(resultss)[:, 0]))
     modresultss.columns= list(stations)
 
