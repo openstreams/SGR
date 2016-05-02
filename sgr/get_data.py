@@ -128,7 +128,7 @@ def readgfds(fname):
     x = np.arange(-180,180,0.09)
     y = np.arange(-90,90,0.09)[::-1]
 
-    return x,y, ret
+    return x,y, 1.0-ret
 
 
 def get_available_gdac_files(datestart,dateend):
