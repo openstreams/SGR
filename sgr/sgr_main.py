@@ -190,8 +190,6 @@ def main(argv=None):
     :param argv:
     :return:
     """
-    #TODO: Add error determination
-
     inifname = 'not set'
     logfname = 'sgr.log'
 

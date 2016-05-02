@@ -11,6 +11,7 @@ import netCDF4
 import re
 import sgr
 import sgr.utils
+import numpy as np
 
 
 stagingarea = sgr.get_path_from_root('staging')
@@ -68,11 +69,6 @@ def httpdownloadurl(url,localdir):
 
 
 
-
-
-
-
-
 def converttohdf5(fname,h5name):
     """
 
@@ -124,6 +120,10 @@ def readgfds(fname):
     :return:
     """
     resX, resY, cols, rows, x, y, data, FillVal = sgr.utils.readMap(fname, 'GTiff',None)
+
+    data[data==3200] = np.nan
+
+    data = data /1E6
 
     return x,y,data
 
