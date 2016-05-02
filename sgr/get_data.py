@@ -120,12 +120,15 @@ def readgfds(fname):
     :return:
     """
     resX, resY, cols, rows, x, y, data, FillVal = sgr.utils.readMap(fname, 'GTiff',None)
+    ret = data.astype(float)
+    ret[data==32000] = np.nan
+    ret[data<=0] = np.nan
+    ret = ret /1.0E6
 
-    data[data==3200] = np.nan
+    x = np.arange(-180,180,0.09)
+    y = np.arange(-90,90,0.09)[::-1]
 
-    data = data /1E6
-
-    return x,y,data
+    return x,y, ret
 
 
 def get_available_gdac_files(datestart,dateend):
@@ -148,7 +151,6 @@ def get_available_modis_files(years):
     :return: list of all available dates
     """
     url_date = {}
-
     remotedir = "http://e4ftl01.cr.usgs.gov/MOTA/MCD43C4.005"
     now = datetime.datetime.now()
     urlpath = urllib.urlopen(remotedir)
@@ -160,7 +162,6 @@ def get_available_modis_files(years):
     lst.sort()
 
     # last one is the dir with the most recent file
-
     for f in lst:
         filedir = str(f).split('"')[1]
         urlpath = urllib.urlopen(remotedir + '/' + filedir)
@@ -169,7 +170,6 @@ def get_available_modis_files(years):
         fn = str(res[0]).split('"')[1]
         filelocation = remotedir + '/' + filedir + '/' + fn
         yrstr = filelocation.split('/')[5].split('.')
-
         thedate = datetime.date(int(yrstr[0]),int(yrstr[1]),int(yrstr[2]))
         url_date[filelocation] = thedate
 
@@ -211,9 +211,7 @@ def get_stationfrombeck(fname,id):
     :param id:
     :return:
     """
-
     bd = netCDF4.Dataset(fname,mode='r')
-
     print bd.variables['ID'][:]
 
 

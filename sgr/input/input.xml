@@ -32,7 +32,7 @@
 	<series>
 		<header>
 			<type>instantaneous</type>
-			<locationId>230</locationId>
+			<locationId>1541</locationId>
 			<!-- Put the locationId here.
                                    the locationId is defined by the data supplier. Delft-Fews
                                    will map this to an internal location if needed.
