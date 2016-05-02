@@ -61,7 +61,16 @@ def httpdownloadurl(url,localdir):
     """
 
     if os.path.exists(os.path.dirname(localdir)):
-        fn, head = urllib.urlretrieve(url, localdir)
+        try:
+            fn, head = urllib.urlretrieve(url, localdir)
+        except:
+            try:
+                 fn, head = urllib.urlretrieve(url, localdir)
+            except:
+                try:
+                     fn, head = urllib.urlretrieve(url, localdir)
+                except:
+                    print "download failed after three tries..."
     else:
         print "Directory for local data does not exists: " + os.path.dirname(localdir)
         raise IOError
