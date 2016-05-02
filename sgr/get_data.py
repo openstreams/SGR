@@ -124,11 +124,12 @@ def readgfds(fname):
     ret[data==32000] = np.nan
     ret[data<=0] = np.nan
     ret = ret /1.0E6
+    ret = 2.43 * (1-ret)
 
     x = np.arange(-180,180,0.09)
     y = np.arange(-90,90,0.09)[::-1]
 
-    return x,y, 1.0-ret
+    return x,y, ret
 
 
 def get_available_gdac_files(datestart,dateend):
