@@ -21,9 +21,14 @@
 sgr_main - command-line processing for satreach
 
 usage:
+    sgr_main -c inifile -M -G
 
     -h show this information
     -c inifile
+    -G run the Microwave base algorithm from the Global Flood Detection Systems
+    -M run the mods based algorithm
+
+if both -G and -M are given the script wil also output a merged result
 
 """
 import sgr
@@ -167,7 +172,7 @@ def whichdatestoget(modisdates,requesteddates):
     """
 
     datesandfiles = {}
-    # Dtermien data range from the requested dates
+    # Determine data range from the requested dates
     a = np.array(requesteddates.keys())
     firstdate = sorted(a[:,2])[0].date()
     lastdate= sorted(a[:,2])[-1].date()
@@ -181,29 +186,35 @@ def whichdatestoget(modisdates,requesteddates):
 
 
 
+# TODO: Add csv/pandas output option
+# TODO: Add switch to select MODIS/GFDS
+# TODO: Add merging of MODIS/GFDS based on error
 
 
 
 def main(argv=None):
     """
-
     :param argv:
     :return:
     """
     inifname = 'not set'
     logfname = 'sgr.log'
+    domodis = False
+    dogfds = False
 
     if argv is None:
         argv = sys.argv[1:]
 
     try:
-        opts, args = getopt.getopt(argv, 'hc:')
+        opts, args = getopt.getopt(argv, 'hc:MG')
     except getopt.error, msg:
         usage(msg)
 
     for o, a in opts:
         if o == '-h': usage()
         if o == '-c': inifname = a
+        if o == '-M': domodis = True
+        if o == '-G': dogfds = True
 
     if 'not set' in inifname:
         print "-c inifile command-line option must be used"
@@ -237,119 +248,122 @@ def main(argv=None):
     keyar = np.array(xmlinputdates.keys())
     stations = np.unique(keyar[:,0])
 
-    # Generate the list of 4day average gdac fils
-    gdacfilelists =  sgr.get_data.get_available_gdac_files((sorted(xmlinputdates.keys())[0][2]),\
-                                                           (sorted(xmlinputdates.keys())[-1][2]))
+    if dogfds:
+        # Generate the list of 4day average gdac fils
+        gdacfilelists =  sgr.get_data.get_available_gdac_files((sorted(xmlinputdates.keys())[0][2]),\
+                                                               (sorted(xmlinputdates.keys())[-1][2]))
 
-    localgdacfiles = downloadandprocesslistgdac(gdacfilelists, logger, staging=staging)
-    # Inilialize the lookup database
-    sgrObjgfds = sgr.sgr_data.SignalQCdf(qnetcdf,gfdssignalnetcdf)
-    sgrObjgfds.MKerrmodel(statids=stations)
+        localgdacfiles = downloadandprocesslistgdac(gdacfilelists, logger, staging=staging)
+        # Inilialize the lookup database
+        sgrObjgfds = sgr.sgr_data.SignalQCdf(qnetcdf,gfdssignalnetcdf)
+        sgrObjgfds.MKerrmodel(statids=stations)
 
-    resultss = []
-    resultsq = []
-    for key in sorted(localgdacfiles):
-        logger.info("Reading GFDS tiff file: " + str(key))
-        x,y, gfdssignal=sgr.get_data.readgfds(key)
-        # Here a loop over all station ID's
-        result_q = []
-        result_q.append(localgdacfiles[key])
-        result_s = []
-        result_s.append(localgdacfiles[key])
-        for stat in stations:
-            gfdssigid = sgr.sgr_data.get_signal_ids(int(stat), y, x, gfdscellidlist)
-            signal = gfdssignal[gfdssigid].mean()
-            result_s.append(signal)
-            result_q.append(sgrObjgfds.findqfromsignal(signal, int(stat)))
+        resultss = []
+        resultsq = []
+        for key in sorted(localgdacfiles):
+            logger.info("Reading GFDS tiff file: " + str(key))
+            x,y, gfdssignal=sgr.get_data.readgfds(key)
+            # Here a loop over all station ID's
+            result_q = []
+            result_q.append(localgdacfiles[key])
+            result_s = []
+            result_s.append(localgdacfiles[key])
+            for stat in stations:
+                gfdssigid = sgr.sgr_data.get_signal_ids(int(stat), y, x, gfdscellidlist)
+                signal = gfdssignal[gfdssigid].mean()
+                result_s.append(signal)
+                result_q.append(sgrObjgfds.findqfromsignal(signal, int(stat)))
 
-        resultss.append(result_s)
-        resultsq.append(result_q)
+            resultss.append(result_s)
+            resultsq.append(result_q)
 
-    # make this into a pandas array
-    # Column id is station id
-    gfdsresultss = pandas.DataFrame(np.array(resultss)[:, 1:], index=pandas.DatetimeIndex(np.array(resultss)[:, 0]))
-    gfdsresultss.columns = list(stations)
+        # make this into a pandas array
+        # Column id is station id
+        gfdsresultss = pandas.DataFrame(np.array(resultss)[:, 1:], index=pandas.DatetimeIndex(np.array(resultss)[:, 0]))
+        gfdsresultss.columns = list(stations)
 
-    gfdsresultsq = pandas.DataFrame(np.array(resultsq)[:, 1:], index=pandas.DatetimeIndex(np.array(resultsq)[:, 0]))
-    gfdsresultsq.columns = list(stations)
+        gfdsresultsq = pandas.DataFrame(np.array(resultsq)[:, 1:], index=pandas.DatetimeIndex(np.array(resultsq)[:, 0]))
+        gfdsresultsq.columns = list(stations)
 
-    # name make into monthly average
-    qavggfds = gfdsresultsq.resample('M').ffill()
-    savggfds = gfdsresultss.resample('M').ffill()
-    # Now rerun with monthly signal input
-    qbest = sgr.sgr_data.signaltoq_pandas(savggfds, qnetcdf, gfdssignalnetcdf)
+        # name make into monthly average
+        qavggfds = gfdsresultsq.resample('M').ffill()
+        savggfds = gfdsresultss.resample('M').ffill()
+        # Now rerun with monthly signal input
+        qbest = sgr.sgr_data.signaltoq_pandas(savggfds, qnetcdf, gfdssignalnetcdf)
 
-    sgr.fews.pandastopixml(savggfds, xmloutput_s + '_GFDS.xml', 'S')
-    sgr.fews.pandastopixml(qavggfds, xmloutput_q+ '_GFDS.xml', 'Q')
-    sgr.fews.pandastopixml(qbest, xmloutput_q + "_GFDS_best.xml", 'Q')
-    sgr.fews.pandastopixml(gfdsresultss, xmloutput_s + "_GFDS_.xml", 'S')
-    sgr.fews.pandastopixml(gfdsresultsq, xmloutput_q + "_GFDS_.xml", 'Q')
-
-
-    # Get modis data in batches of years
-    lastyear = (sorted(xmlinputdates.keys())[-1][2]).year
-    firstyear = (sorted(xmlinputdates.keys())[0][2]).year
-    firstmonth = (sorted(xmlinputdates.keys())[0][2]).month
-    if firstmonth ==1:
-        firstyear = firstyear -1
-    yrs = range(firstyear,lastyear+1)
-    logger.info("Getting list of available modis files...")
-    lst = sgr.get_data.get_available_modis_files(yrs)
-
-    modisfilelist = whichdatestoget(lst,xmlinputdates)
-    localfiles = downloadandprocesslist(modisfilelist, logger, staging=staging)
-
-    #Initialize the databsse lookup object
-    sgrObj = sgr.sgr_data.SignalQCdf(qnetcdf,modissignalnetcdf)
-    # Run the error model in the object to fill it with the current stations nlu
-    sgrObj.MKerrmodel(statids=stations)
-
-    resultss = []
-    resultsq = []
-    for key in sorted(localfiles):
-        logger.info('Reading modis file, converting to waterfrac: ' + key)
-        x,y,swir21 = sgr.modis_waterfrac.readmodisswir21(key)
-
-        wf = sgr.modis_waterfrac.detwfrac(swir21)
-        # Here a loop over all station ID's
-        result_q = []
-        result_q.append(localfiles[key])
-        result_s = []
-        result_s.append(localfiles[key])
-        # Extract data fro all stations
-        for stat in stations:
-            logger.info('Getting signal data for station: ' + str(stat))
-            sngid = sgr.sgr_data.get_signal_ids(int(stat), y, x, modiscellidlist)
-            signal = wf[sngid].mean()
-            # now initialize the lookup object
-            result_s.append(signal)
-            q= sgrObj.findqfromsignal(signal,int(stat))
-            result_q.append(q)
-
-        resultss.append(result_s)
-        resultsq.append(result_q)
+        sgr.fews.pandastopixml(savggfds, xmloutput_s + '_GFDS.xml', 'S')
+        sgr.fews.pandastopixml(qavggfds, xmloutput_q+ '_GFDS.xml', 'Q')
+        sgr.fews.pandastopixml(qbest, xmloutput_q + "_GFDS_best.xml", 'Q')
+        sgr.fews.pandastopixml(gfdsresultss, xmloutput_s + "_GFDS_.xml", 'S')
+        sgr.fews.pandastopixml(gfdsresultsq, xmloutput_q + "_GFDS_.xml", 'Q')
 
 
-    # make this into a pandas array
-    # Column id is station id
-    modresultss = pandas.DataFrame(np.array(resultss)[:, 1:], index=pandas.DatetimeIndex(np.array(resultss)[:, 0]))
-    modresultss.columns= list(stations)
+    if domodis:
+        # Get modis data in batches of years
+        lastyear = (sorted(xmlinputdates.keys())[-1][2]).year
+        firstyear = (sorted(xmlinputdates.keys())[0][2]).year
+        firstmonth = (sorted(xmlinputdates.keys())[0][2]).month
+        if firstmonth ==1:
+            firstyear = firstyear -1
+        yrs = range(firstyear,lastyear+1)
+        logger.info("Getting list of available modis files...")
+        lst = sgr.get_data.get_available_modis_files(yrs)
 
-    modresultsq = pandas.DataFrame(np.array(resultsq)[:, 1:], index=pandas.DatetimeIndex(np.array(resultsq)[:, 0]))
-    modresultsq.columns = list(stations)
+        modisfilelist = whichdatestoget(lst,xmlinputdates)
+        localfiles = downloadandprocesslist(modisfilelist, logger, staging=staging)
 
-    # name make into monthly average
-    qavg =modresultsq.resample('M').ffill()
-    savg = modresultss.resample('M').ffill()
+        #Initialize the databsse lookup object
+        sgrObj = sgr.sgr_data.SignalQCdf(qnetcdf,modissignalnetcdf)
+        # Run the error model in the object to fill it with the current stations nlu
+        sgrObj.MKerrmodel(statids=stations)
 
-    # Now rerun with monthly signal input
-    qbest = sgr.sgr_data.signaltoq_pandas(savg,qnetcdf,modissignalnetcdf)
+        resultss = []
+        resultsq = []
+        for key in sorted(localfiles):
+            logger.info('Reading modis file, converting to waterfrac: ' + key)
+            x,y,swir21 = sgr.modis_waterfrac.readmodisswir21(key)
 
-    sgr.fews.pandastopixml(savg,xmloutput_s,'S')
-    sgr.fews.pandastopixml(qavg, xmloutput_q,'Q')
-    sgr.fews.pandastopixml(qbest, xmloutput_q + "_best.xml", 'Q')
-    sgr.fews.pandastopixml(modresultss,xmloutput_s + "_.xml",'S')
-    sgr.fews.pandastopixml(modresultsq, xmloutput_q+ "_.xml",'Q')
+            wf = sgr.modis_waterfrac.detwfrac(swir21)
+            # Here a loop over all station ID's
+            result_q = []
+            result_q.append(localfiles[key])
+            result_s = []
+            result_s.append(localfiles[key])
+            # Extract data fro all stations
+            for stat in stations:
+                logger.info('Getting signal data for station: ' + str(stat))
+                sngid = sgr.sgr_data.get_signal_ids(int(stat), y, x, modiscellidlist)
+                signal = wf[sngid].mean()
+                # now initialize the lookup object
+                result_s.append(signal)
+                q= sgrObj.findqfromsignal(signal,int(stat))
+                result_q.append(q)
+
+            resultss.append(result_s)
+            resultsq.append(result_q)
+
+
+        # make this into a pandas array
+        # Column id is station id
+        modresultss = pandas.DataFrame(np.array(resultss)[:, 1:], index=pandas.DatetimeIndex(np.array(resultss)[:, 0]))
+        modresultss.columns= list(stations)
+
+        modresultsq = pandas.DataFrame(np.array(resultsq)[:, 1:], index=pandas.DatetimeIndex(np.array(resultsq)[:, 0]))
+        modresultsq.columns = list(stations)
+
+        # name make into monthly average
+        qavg =modresultsq.resample('M').ffill()
+        savg = modresultss.resample('M').ffill()
+
+        # Now rerun with monthly signal input
+        qbest = sgr.sgr_data.signaltoq_pandas(savg,qnetcdf,modissignalnetcdf)
+
+        sgr.fews.pandastopixml(savg,xmloutput_s,'S')
+        sgr.fews.pandastopixml(qavg, xmloutput_q,'Q')
+        sgr.fews.pandastopixml(qbest, xmloutput_q + "_best.xml", 'Q')
+        sgr.fews.pandastopixml(modresultss,xmloutput_s + "_.xml",'S')
+        sgr.fews.pandastopixml(modresultsq, xmloutput_q+ "_.xml",'Q')
+
     logger.info('sgr ended sucessfully')
 
 
