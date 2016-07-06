@@ -85,7 +85,7 @@ def converttohdf5(fname,h5name):
     :return:
     """
 
-    converter = sgr.get_path_from_root(os.path.join('convert','bin','h4toh5convert.exe'))
+    converter = sgr.get_path_from_root(os.path.join('sgr','convert','bin','h4toh5convert.exe'))
     try:
         subprocess.call([converter,fname,h5name])
     except OSError as e:

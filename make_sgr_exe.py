@@ -24,7 +24,7 @@ data_files=matplotlib.get_py2exe_datafiles()
 gdaldata = os.getenv("GDAL_DATA")
 data_files.append(("./gdal-data", glob.glob(gdaldata + "/*.*")))
 
-
+data_files.append(("./sgr/convert", glob.glob('sgr/convert' + "/*.*")))
 data_files.append(("./sgr/data", glob.glob('sgr/data' + "/*.*")))
 
 print data_files

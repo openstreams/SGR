@@ -33,7 +33,6 @@ def signaltoq_pandas(signalframe,qnetcdf, signalnetcdf):
         for i in signalframe.index:
             qdf[col][i] = sgrObj.findqfromsignal(signalframe[col][i],int(col))
             err = sgrObj.geterrorfromqest(qdf[col][i],int(col))
-            print err
             qdf[col +'_l'][i] = qdf[col][i] * (1 - err[0])
             qdf[col + '_h'][i] = qdf[col][i] * (1 + err[0])
 

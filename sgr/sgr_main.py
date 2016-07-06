@@ -21,12 +21,13 @@
 sgr_main - command-line processing for satreach
 
 usage:
-    sgr_main -c inifile -M -G
+    sgr_main -c inifile -M -G [-l loglevel]
 
     -h show this information
     -c inifile
-    -G run the Microwave base algorithm from the Global Flood Detection Systems
+    -G run the Microwave base algorithm from the Global Flood Detection System
     -M run the mods based algorithm
+    -l loglevel (must be one of DEBUG, INFO, WARNING, ERROR)
 
 if both -G and -M are given the script wil also output a merged result
 
@@ -186,8 +187,7 @@ def whichdatestoget(modisdates,requesteddates):
 
 
 
-# TODO: Add csv/pandas output option
-# TODO: Add switch to select MODIS/GFDS
+# TODO: Add csv/pandas output/input option
 # TODO: Add merging of MODIS/GFDS based on error
 
 
@@ -201,12 +201,13 @@ def main(argv=None):
     logfname = 'sgr.log'
     domodis = False
     dogfds = False
+    loglevel = sgr.utils.logging.WARN
 
     if argv is None:
         argv = sys.argv[1:]
 
     try:
-        opts, args = getopt.getopt(argv, 'hc:MG')
+        opts, args = getopt.getopt(argv, 'hc:MGl:')
     except getopt.error, msg:
         usage(msg)
 
@@ -215,13 +216,15 @@ def main(argv=None):
         if o == '-c': inifname = a
         if o == '-M': domodis = True
         if o == '-G': dogfds = True
+        if o == '-l': exec "loglevel = sgr.utils.logging." + a.upper()
 
     if 'not set' in inifname:
         print "-c inifile command-line option must be used"
         usage()
 
     # set logger and get settings from config file
-    logger = sgr.utils.setlogger(logfname,'sgr')
+    logger = sgr.utils.setlogger(logfname,'sgr',level=loglevel)
+
     #get_gdac_file_by_date(skipifexists=True)
     logger.info("Starting up sgr...")
     #get_modis_file_by_date(thedatetime=datetime.datetime(2016,2,2),skipifexists=True)
@@ -230,18 +233,23 @@ def main(argv=None):
     else:
         logger.error("Cannot open config file: " + inifname)
         exit(-1)
-    qnetcdf = sgr.utils.configget(logger,sgr.config,'data','qdbase', sgr.get_path_from_root('data/Beck_Runoff_Database_v3.nc'))
-    modissignalnetcdf = sgr.utils.configget(logger,sgr.config,'data','modissignaldbase',sgr.get_path_from_root('data/MODIS_SGR.nc'))
+    qnetcdf = sgr.utils.configget(logger,sgr.config,'data','qdbase', sgr.get_path_from_root('sgr/data/Beck_Runoff_Database_v3.nc'))
+    modissignalnetcdf = sgr.utils.configget(logger,sgr.config,'data','modissignaldbase',sgr.get_path_from_root('sgr/data/MODIS_SGR.nc'))
     gfdssignalnetcdf = sgr.utils.configget(logger, sgr.config, 'data', 'gfdssignaldbase',
-                                            sgr.get_path_from_root('data/GFDS_SGR.nc'))
-    modiscellidlist = sgr.utils.configget(logger,sgr.config,'data','modisidlist',sgr.get_path_from_root('data/MODIS_SGR_cells.csv'))
+                                            sgr.get_path_from_root('sgr/data/GFDS_SGR.nc'))
+    modiscellidlist = sgr.utils.configget(logger,sgr.config,'data','modisidlist',sgr.get_path_from_root('sgr/data/MODIS_SGR_cells.csv'))
     gfdscellidlist = sgr.utils.configget(logger, sgr.config, 'data', 'gfdsidlist',
-                                          sgr.get_path_from_root('data/GFDS_SGR_cells.csv'))
+                                          sgr.get_path_from_root('sgr/data/GFDS_SGR_cells.csv'))
 
     staging=sgr.utils.configget(logger,sgr.config,'data','staging',sgr.get_path_from_root('staging/'))
     xmlinput = sgr.utils.configget(logger,sgr.config,'data','xmlinput',sgr.get_path_from_root('input/input.xml'))
-    xmloutput_q = sgr.utils.configget(logger,sgr.config,'data','q_output',sgr.get_path_from_root('output/Q.xml'))
-    xmloutput_s = sgr.utils.configget(logger, sgr.config, 'data', 'signal_output', sgr.get_path_from_root('output/Signal.xml'))
+    xmloutput_q = sgr.utils.configget(logger,sgr.config,'data','q_output_gfds',sgr.get_path_from_root('output/gfds_Q.xml'))
+    xmloutput_s = sgr.utils.configget(logger, sgr.config, 'data', 'signal_output_gfds', sgr.get_path_from_root('output/gfds_Signal.xml'))
+
+    xmloutput_q_modis = sgr.utils.configget(logger, sgr.config, 'data', 'q_output_modis', sgr.get_path_from_root('output/modis_Q.xml'))
+    xmloutput_s_modis = sgr.utils.configget(logger, sgr.config, 'data', 'signal_output_modis',
+                                      sgr.get_path_from_root('output/modis_Signal.xml'))
+
 
     # check the input data (requested output) from the XML
     xmlinputdates = sgr.fews.readpixml(xmlinput)
@@ -291,11 +299,9 @@ def main(argv=None):
         # Now rerun with monthly signal input
         qbest = sgr.sgr_data.signaltoq_pandas(savggfds, qnetcdf, gfdssignalnetcdf)
 
-        sgr.fews.pandastopixml(savggfds, xmloutput_s + '_GFDS.xml', 'S')
-        sgr.fews.pandastopixml(qavggfds, xmloutput_q+ '_GFDS.xml', 'Q')
-        sgr.fews.pandastopixml(qbest, xmloutput_q + "_GFDS_best.xml", 'Q')
-        sgr.fews.pandastopixml(gfdsresultss, xmloutput_s + "_GFDS_.xml", 'S')
-        sgr.fews.pandastopixml(gfdsresultsq, xmloutput_q + "_GFDS_.xml", 'Q')
+        sgr.fews.pandastopixml(qbest, xmloutput_q + ".month.xml", 'Q')
+        sgr.fews.pandastopixml(gfdsresultss,  xmloutput_s , 'S')
+        sgr.fews.pandastopixml(gfdsresultsq, xmloutput_q , 'Q')
 
 
     if domodis:
@@ -329,7 +335,7 @@ def main(argv=None):
             result_q.append(localfiles[key])
             result_s = []
             result_s.append(localfiles[key])
-            # Extract data fro all stations
+            # Extract data for all stations
             for stat in stations:
                 logger.info('Getting signal data for station: ' + str(stat))
                 sngid = sgr.sgr_data.get_signal_ids(int(stat), y, x, modiscellidlist)
@@ -358,11 +364,9 @@ def main(argv=None):
         # Now rerun with monthly signal input
         qbest = sgr.sgr_data.signaltoq_pandas(savg,qnetcdf,modissignalnetcdf)
 
-        sgr.fews.pandastopixml(savg,xmloutput_s,'S')
-        sgr.fews.pandastopixml(qavg, xmloutput_q,'Q')
-        sgr.fews.pandastopixml(qbest, xmloutput_q + "_best.xml", 'Q')
-        sgr.fews.pandastopixml(modresultss,xmloutput_s + "_.xml",'S')
-        sgr.fews.pandastopixml(modresultsq, xmloutput_q+ "_.xml",'Q')
+        sgr.fews.pandastopixml(qbest, xmloutput_q_modis + ".month.xml", 'Q')
+        sgr.fews.pandastopixml(modresultss, xmloutput_s_modis, 'S')
+        sgr.fews.pandastopixml(modresultsq, xmloutput_q_modis, 'Q')
 
     logger.info('sgr ended sucessfully')
 
