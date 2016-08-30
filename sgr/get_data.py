@@ -1,7 +1,7 @@
 
 
 # http://www.gdacs.org/flooddetection/data/ALL/AvgSignalTiffs/
-import urllib
+import urllib,urllib2
 import datetime
 import os
 import sys
@@ -12,6 +12,8 @@ import re
 import sgr
 import sgr.utils
 import numpy as np
+from contextlib import closing
+import shutil
 
 
 stagingarea = sgr.get_path_from_root('staging')
@@ -25,8 +27,12 @@ def get_modis_file_by_date(thedatetime=None,skipifexists=True):
     :return: local file name None if unsuccessfull
     """
 
+    # via ftp: ftp://ladsweb.nascom.nasa.gov/allData/5/MCD43C4/2016/217/
+    # /MCD43C4.A2016217.005.2016239200748.hdf
+
+
     producstr = "http://e4ftl01.cr.usgs.gov/MOTA/MCD43C4.005/"
-    # fname MCD43C4.A2015281.005.2015302014313.hdf
+    # fname MCD43C4.A2016217.005.2016239200748.hdf
 
     if thedatetime == None:
         now = datetime.datetime.now()
@@ -47,7 +53,50 @@ def get_modis_file_by_date(thedatetime=None,skipifexists=True):
     fn = dirs.select('a[href*=hdf]')
     thename = str(fn[0]).split('\"')[1]
 
-    fn, head = urllib.urlretrieve(remotedir + "/" +  thename, thename)
+
+
+    fn, head = urllib.urlretrieve(remotedir + "/" + thename, thename)
+
+    return fn
+
+
+def get_modis_file_by_date(thedatetime=None,skipifexists=True):
+    """
+    gets a file for a date. If date is not given the
+    current date is used.
+
+    :return: local file name None if unsuccessfull
+    """
+
+    # via ftp: ftp://ladsweb.nascom.nasa.gov/allData/5/MCD43C4/2016/217/
+    # /MCD43C4.A2016217.005.2016239200748.hdf
+
+
+    producstr = "http://e4ftl01.cr.usgs.gov/MOTA/MCD43C4.005/"
+    # fname MCD43C4.A2016217.005.2016239200748.hdf
+
+    if thedatetime == None:
+        now = datetime.datetime.now()
+    else:
+        now = thedatetime
+
+    curyear = "%4d" % now.year
+    curmonth= "%02d" % now.month
+    curday = "%02d" % now.day
+    yday = "%03d" % now.timetuple().tm_yday
+    localfname = curyear + curmonth + curday + ".tif"
+
+    fname = producstr + curyear + "." + curmonth + "." + curday +\
+                    "/MCD43C4.A" + curyear + yday
+    remotedir = producstr + curyear + "." + curmonth + "." + curday
+    urlpath = urllib.urlopen(remotedir)
+    dirs = BeautifulSoup(urlpath.read(),'lxml')
+    fn = dirs.select('a[href*=hdf]')
+    thename = str(fn[0]).split('\"')[1]
+
+
+
+    fn, head = urllib.urlretrieve(remotedir + "/" + thename, thename)
 
     return fn
 
@@ -62,13 +111,22 @@ def httpdownloadurl(url,localdir):
 
     if os.path.exists(os.path.dirname(localdir)):
         try:
-            fn, head = urllib.urlretrieve(url, localdir)
+            #fn, head = urllib.urlretrieve(url, localdir)
+            with closing(urllib2.urlopen(url)) as r:
+                with open(localdir, 'wb') as f:
+                    shutil.copyfileobj(r, f)
         except:
             try:
-                 fn, head = urllib.urlretrieve(url, localdir)
+                 #fn, head = urllib.urlretrieve(url, localdir)
+                 with closing(urllib2.urlopen(url)) as r:
+                     with open(localdir, 'wb') as f:
+                         shutil.copyfileobj(r, f)
             except:
                 try:
-                     fn, head = urllib.urlretrieve(url, localdir)
+                     #fn, head = urllib.urlretrieve(url, localdir)
+                     with closing(urllib2.urlopen(url)) as r:
+                         with open(localdir, 'wb') as f:
+                             shutil.copyfileobj(r, f)
                 except:
                     print "download failed after three tries..."
     else:
@@ -85,7 +143,8 @@ def converttohdf5(fname,h5name):
     :return:
     """
 
-    converter = sgr.get_path_from_root(os.path.join('sgr','convert','bin','h4toh5convert.exe'))
+    converter = sgr.get_path_from_root(os.path.join('convert','bin','h4toh5convert.exe'))
+    print converter
     try:
         subprocess.call([converter,fname,h5name])
     except OSError as e:
@@ -143,6 +202,12 @@ def readgfds(fname):
 
 def get_available_gdac_files(datestart,dateend):
 
+    # refuse to go into the future
+    thenow = datetime.datetime.now()
+
+    if dateend > thenow:
+        dateend = thenow
+
     datelist =  [datestart + datetime.timedelta(days=x) for x in range(0, (dateend-datestart).days)]
 
     ret = {}
@@ -161,6 +226,7 @@ def get_available_modis_files(years):
     :return: list of all available dates
     """
     url_date = {}
+
     remotedir = "http://e4ftl01.cr.usgs.gov/MOTA/MCD43C4.005"
     now = datetime.datetime.now()
     urlpath = urllib.urlopen(remotedir)
@@ -182,6 +248,33 @@ def get_available_modis_files(years):
         yrstr = filelocation.split('/')[5].split('.')
         thedate = datetime.date(int(yrstr[0]),int(yrstr[1]),int(yrstr[2]))
         url_date[filelocation] = thedate
+
+    return url_date
+
+
+def get_available_modis_files_ftp(years):
+    """
+    input list of year
+
+    :return: list of all available dates
+    """
+    url_date = {}
+
+    for yr in years:
+        remotedir = "ftp://ladsweb.nascom.nasa.gov/allData/5/MCD43C4/" + str(yr)
+        r = urllib2.urlopen(urllib2.Request(remotedir))
+        zz = r.read().splitlines()
+        for ddir in zz:
+            day =  ddir.split(' ')[-1]
+            dirwithfile = "ftp://ladsweb.nascom.nasa.gov/allData/5/MCD43C4/" + str(yr)  + '/' + str(day)
+            d = urllib2.urlopen(urllib2.Request(dirwithfile))
+            dd = d.read().splitlines()
+            file =  dd[0].split(' ')[-1]
+            filelocation = dirwithfile + '/' +  file
+            thedate = datetime.datetime.strptime(str(yr) + ' ' + str(day), '%Y %j').date()
+            url_date[filelocation] = thedate
+
+
 
     return url_date
 
@@ -231,7 +324,7 @@ def main(argv=None):
     s = datetime.datetime(2016,4,1)
     e = datetime.datetime(2016,4,10)
 
-    lst = get_available_gdac_files(s,e)
+    lst = get_available_modis_files_ftp([2016])
     print lst
     #url,fname = get_last_available_modis_file()
     #lfilename = os.path.join(stagingarea, fname)

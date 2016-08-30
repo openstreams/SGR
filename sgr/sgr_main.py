@@ -294,8 +294,8 @@ def main(argv=None):
         gfdsresultsq.columns = list(stations)
 
         # name make into monthly average
-        qavggfds = gfdsresultsq.resample('M').ffill()
-        savggfds = gfdsresultss.resample('M').ffill()
+        qavggfds = gfdsresultsq.astype(float).resample('MS',closed='right', label='right').mean()
+        savggfds = gfdsresultss.astype(float).resample('MS',closed='right', label='right').mean()
         # Now rerun with monthly signal input
         qbest = sgr.sgr_data.signaltoq_pandas(savggfds, qnetcdf, gfdssignalnetcdf)
 
@@ -312,8 +312,9 @@ def main(argv=None):
         if firstmonth ==1:
             firstyear = firstyear -1
         yrs = range(firstyear,lastyear+1)
-        logger.info("Getting list of available modis files...")
-        lst = sgr.get_data.get_available_modis_files(yrs)
+        logger.info("Getting list of available modis files via ftp...")
+        #lst = sgr.get_data.get_available_modis_files(yrs)
+        lst = sgr.get_data.get_available_modis_files_ftp(yrs)
 
         modisfilelist = whichdatestoget(lst,xmlinputdates)
         localfiles = downloadandprocesslist(modisfilelist, logger, staging=staging)
@@ -358,8 +359,9 @@ def main(argv=None):
         modresultsq.columns = list(stations)
 
         # name make into monthly average
-        qavg =modresultsq.resample('M').ffill()
-        savg = modresultss.resample('M').ffill()
+        avg = modresultsq.astype(float).resample('MS',closed='right', label='right').mean()
+        savg = modresultss.astype(float).resample('MS',closed='right', label='right').mean()
+
 
         # Now rerun with monthly signal input
         qbest = sgr.sgr_data.signaltoq_pandas(savg,qnetcdf,modissignalnetcdf)
