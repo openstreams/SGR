@@ -197,7 +197,7 @@ def pandastopixml(pavg,xmlfile,parametername):
         ofile.write("<header>\n")
         ofile.write("<type>instantaneous</type>\n")
         if '_h' in col or '_l' in col:
-            ofile.write("<locationId>" + str(col).strip('_h') + "</locationId>\n")
+            ofile.write("<locationId>" + str(col).strip('_h').strip('_l') + "</locationId>\n")
             ofile.write("<parameterId>" + parametername + '_' + col[-1] + "</parameterId>\n")
         else:
             ofile.write("<locationId>" + str(col) + "</locationId>\n")

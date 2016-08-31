@@ -338,7 +338,7 @@ def main(argv=None):
             result_s.append(localfiles[key])
             # Extract data for all stations
             for stat in stations:
-                logger.info('Getting signal data for station: ' + str(stat))
+                logger.debug('Getting signal data for station: ' + str(stat))
                 sngid = sgr.sgr_data.get_signal_ids(int(stat), y, x, modiscellidlist)
                 signal = wf[sngid].mean()
                 # now initialize the lookup object
