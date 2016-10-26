@@ -42,6 +42,7 @@ import pandas
 import os, getopt, sys, glob
 import numpy as np
 import datetime
+import pickle
 
 
 def usage(*args):
@@ -312,9 +313,12 @@ def main(argv=None):
         if firstmonth ==1:
             firstyear = firstyear -1
         yrs = range(firstyear,lastyear+1)
-        logger.info("Getting list of available modis files via ftp...")
+        logger.info("Getting list of available modis files...")
         #lst = sgr.get_data.get_available_modis_files(yrs)
         lst = sgr.get_data.get_available_modis_files_ftp(yrs)
+
+
+        pickle.dump(lst, 'modislist.pkl')
 
         modisfilelist = whichdatestoget(lst,xmlinputdates)
         localfiles = downloadandprocesslist(modisfilelist, logger, staging=staging)

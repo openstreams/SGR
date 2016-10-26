@@ -251,7 +251,7 @@ def get_available_modis_files(years):
 
     return url_date
 
-
+import time
 def get_available_modis_files_ftp(years):
     """
     input list of year
@@ -259,15 +259,47 @@ def get_available_modis_files_ftp(years):
     :return: list of all available dates
     """
     url_date = {}
+    maxretry = 5
+    fail = False
 
     for yr in years:
         remotedir = "ftp://ladsweb.nascom.nasa.gov/allData/5/MCD43C4/" + str(yr)
-        r = urllib2.urlopen(urllib2.Request(remotedir))
+        try:
+            r = urllib2.urlopen(urllib2.Request(remotedir))
+            fail = False
+        except:
+            fail = True
+            while retry <= maxretry and fail == True:
+                retry += 1
+                print str(retry) + " retrying: " + remotedir
+                time.sleep(2)
+                try:
+                    r = urllib2.urlopen(urllib2.Request(remotedir))
+                    fail = False
+                except:
+                    fail = True
+
         zz = r.read().splitlines()
         for ddir in zz:
             day =  ddir.split(' ')[-1]
             dirwithfile = "ftp://ladsweb.nascom.nasa.gov/allData/5/MCD43C4/" + str(yr)  + '/' + str(day)
-            d = urllib2.urlopen(urllib2.Request(dirwithfile))
+            print "checking: " + dirwithfile
+            try:
+                retry = 0
+                d = urllib2.urlopen(urllib2.Request(dirwithfile))
+                fail = False
+            except:
+                fail = True
+                while retry <= maxretry and fail == True:
+                    retry  += 1
+                    print str(retry) + " retrying: " + dirwithfile
+                    time.sleep(2)
+                    try:
+                        d = urllib2.urlopen(urllib2.Request(dirwithfile))
+                        fail = False
+                    except:
+                        fail = True
+
             dd = d.read().splitlines()
             file =  dd[0].split(' ')[-1]
             filelocation = dirwithfile + '/' +  file
