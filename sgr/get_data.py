@@ -31,8 +31,8 @@ def get_modis_file_by_date(thedatetime=None,skipifexists=True):
     # /MCD43C4.A2016217.005.2016239200748.hdf
 
 
-    producstr = "http://e4ftl01.cr.usgs.gov/MOTA/MCD43C4.005/"
-    # fname MCD43C4.A2016217.005.2016239200748.hdf
+    producstr = "http://e4ftl01.cr.usgs.gov/MOTA/MCD43C4.006/"
+    # fname MCD43C4.A2018055.006.2018065021258.hdf
 
     if thedatetime == None:
         now = datetime.datetime.now()
@@ -72,8 +72,8 @@ def get_modis_file_by_date(thedatetime=None,skipifexists=True):
     # /MCD43C4.A2016217.005.2016239200748.hdf
 
 
-    producstr = "http://e4ftl01.cr.usgs.gov/MOTA/MCD43C4.005/"
-    # fname MCD43C4.A2016217.005.2016239200748.hdf
+    producstr = "http://e4ftl01.cr.usgs.gov/MOTA/MCD43C4.006/"
+    # fname MCD43C4.A2018055.006.2018065021258.hdf
 
     if thedatetime == None:
         now = datetime.datetime.now()
