@@ -60,47 +60,6 @@ def get_modis_file_by_date(thedatetime=None,skipifexists=True):
     return fn
 
 
-def get_modis_file_by_date(thedatetime=None,skipifexists=True):
-    """
-    gets a file for a date. If date is not given the
-    current date is used.
-
-    :return: local file name None if unsuccessfull
-    """
-
-    # via ftp: ftp://ladsweb.nascom.nasa.gov/allData/5/MCD43C4/2016/217/
-    # /MCD43C4.A2016217.005.2016239200748.hdf
-
-
-    producstr = "http://e4ftl01.cr.usgs.gov/MOTA/MCD43C4.006/"
-    # fname MCD43C4.A2018055.006.2018065021258.hdf
-
-    if thedatetime == None:
-        now = datetime.datetime.now()
-    else:
-        now = thedatetime
-
-    curyear = "%4d" % now.year
-    curmonth= "%02d" % now.month
-    curday = "%02d" % now.day
-    yday = "%03d" % now.timetuple().tm_yday
-    localfname = curyear + curmonth + curday + ".tif"
-
-    fname = producstr + curyear + "." + curmonth + "." + curday +\
-                    "/MCD43C4.A" + curyear + yday
-    remotedir = producstr + curyear + "." + curmonth + "." + curday
-    urlpath = urllib.urlopen(remotedir)
-    dirs = BeautifulSoup(urlpath.read(),'lxml')
-    fn = dirs.select('a[href*=hdf]')
-    thename = str(fn[0]).split('\"')[1]
-
-
-
-    fn, head = urllib.urlretrieve(remotedir + "/" + thename, thename)
-
-    return fn
-
-
 def httpdownloadurl(url,localdir):
     """
 
@@ -227,7 +186,7 @@ def get_available_modis_files(years):
     """
     url_date = {}
 
-    remotedir = "http://e4ftl01.cr.usgs.gov/MOTA/MCD43C4.005"
+    remotedir = "http://e4ftl01.cr.usgs.gov/MOTA/MCD43C4.006"
     now = datetime.datetime.now()
     urlpath = urllib.urlopen(remotedir)
     dirlisthtml =BeautifulSoup(urlpath.read(),'lxml')
@@ -263,7 +222,7 @@ def get_available_modis_files_ftp(years):
     fail = False
 
     for yr in years:
-        remotedir = "ftp://ladsweb.nascom.nasa.gov/allData/5/MCD43C4/" + str(yr)
+        remotedir = "ftp://ladsweb.nascom.nasa.gov/allData/6/MCD43C4/" + str(yr)
         try:
             r = urllib2.urlopen(urllib2.Request(remotedir))
             fail = False
@@ -282,7 +241,7 @@ def get_available_modis_files_ftp(years):
         zz = r.read().splitlines()
         for ddir in zz:
             day =  ddir.split(' ')[-1]
-            dirwithfile = "ftp://ladsweb.nascom.nasa.gov/allData/5/MCD43C4/" + str(yr)  + '/' + str(day)
+            dirwithfile = "ftp://ladsweb.nascom.nasa.gov/allData/6/MCD43C4/" + str(yr)  + '/' + str(day)
             print "checking: " + dirwithfile
             try:
                 retry = 0
@@ -317,7 +276,7 @@ def get_last_available_modis_file():
     :return: list of availble dates
     """
 
-    remotedir = "http://e4ftl01.cr.usgs.gov/MOTA/MCD43C4.005"
+    remotedir = "http://e4ftl01.cr.usgs.gov/MOTA/MCD43C4.006"
     now = datetime.datetime.now()
     urlpath = urllib.urlopen(remotedir)
     dirlisthtml =BeautifulSoup(urlpath.read(),'lxml')
